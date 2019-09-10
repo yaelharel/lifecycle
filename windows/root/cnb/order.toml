@@ -1,0 +1,5 @@
+[[order]]
+
+  [[order.group]]
+    id = "fake-buildpack-id"
+    version = "0.0.0"

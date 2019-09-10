@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -12,19 +13,19 @@ import (
 	"github.com/pkg/errors"
 )
 
+var (
+	DefaultLayersDir     = filepath.FromSlash("/layers")
+	DefaultAppDir        = filepath.FromSlash("/workspace")
+	DefaultBuildpacksDir = filepath.FromSlash("/cnb/buildpacks")
+	DefaultPlatformDir   = filepath.FromSlash("/platform")
+	DefaultOrderPath     = filepath.FromSlash("/cnb/order.toml")
+	DefaultGroupPath     = filepath.FromSlash("./group.toml")
+	DefaultStackPath     = filepath.FromSlash("/cnb/stack.toml")
+	DefaultAnalyzedPath  = filepath.FromSlash("./analyzed.toml")
+	DefaultPlanPath      = filepath.FromSlash("./plan.toml")
+	DefaultProcessType   = filepath.FromSlash("web")
+)
 const (
-	DefaultLayersDir     = "/layers"
-	DefaultAppDir        = "/workspace"
-	DefaultBuildpacksDir = "/cnb/buildpacks"
-	DefaultPlatformDir   = "/platform"
-	DefaultOrderPath     = "/cnb/order.toml"
-	DefaultGroupPath     = "./group.toml"
-	DefaultStackPath     = "/cnb/stack.toml"
-	DefaultAnalyzedPath  = "./analyzed.toml"
-	DefaultPlanPath      = "./plan.toml"
-	DefaultProcessType   = "web"
-	DefaultLauncherPath  = "/cnb/lifecycle/launcher"
-
 	EnvLayersDir         = "CNB_LAYERS_DIR"
 	EnvAppDir            = "CNB_APP_DIR"
 	EnvBuildpacksDir     = "CNB_BUILDPACKS_DIR"

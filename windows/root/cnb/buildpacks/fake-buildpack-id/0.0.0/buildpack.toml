@@ -1,0 +1,12 @@
+api = "0.2"
+
+[buildpack]
+id = "fake-buildpack-id"
+name = "Fake"
+version = "0.0.0"
+
+[metadata]
+include_files = ["bin/build.exe","bin/detect.exe","buildpack.toml"]
+
+[[stacks]]
+id = "io.buildpacks.stacks.windows1809"

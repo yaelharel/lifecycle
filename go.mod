@@ -9,7 +9,7 @@ require (
 	github.com/golang/mock v1.3.1
 	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/google/go-cmp v0.3.0
-	github.com/google/go-containerregistry v0.0.0-20190503220729-1c6c7f61e8a5
+	github.com/google/go-containerregistry v0.0.0-20190909173943-a8228cdaedff
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/sclevine/spec v1.2.0
@@ -23,3 +23,5 @@ require (
 	google.golang.org/genproto v0.0.0-20190508193815-b515fa19cec8 // indirect
 	google.golang.org/grpc v1.20.1 // indirect
 )
+
+replace github.com/buildpack/imgutil v0.0.0-20190726132853-1f31ed20483a => ../imgutil

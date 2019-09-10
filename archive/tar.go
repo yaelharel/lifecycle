@@ -81,7 +81,7 @@ func WriteTarArchive(w io.Writer, srcDir string, uid, gid int) error {
 
 func addParentDirs(tarDir string, tw *tar.Writer, uid, gid int) error {
 	parent := filepath.Dir(tarDir)
-	if parent == "." || parent == "/" {
+	if parent == "." || parent == "c:\\" || parent == "\\" || parent == "/" {
 		return nil
 	}
 
