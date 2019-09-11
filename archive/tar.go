@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
+	"runtime"
 	"time"
 )
 
@@ -36,6 +38,10 @@ func WriteTarArchive(w io.Writer, srcDir string, uid, gid int) error {
 		return err
 	}
 
+	if runtime.GOOS == "windows" {
+
+	}
+
 	return filepath.Walk(srcDir, func(file string, fi os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -55,7 +61,11 @@ func WriteTarArchive(w io.Writer, srcDir string, uid, gid int) error {
 		if err != nil {
 			return err
 		}
-		header.Name = file
+		if runtime.GOOS == "windows" {
+			header.Name = path.Join("Files", filepath.ToSlash(file))
+		} else {
+			header.Name = file
+		}
 		header.ModTime = time.Date(1980, time.January, 1, 0, 0, 1, 0, time.UTC)
 		header.Uid = uid
 		header.Gid = gid
@@ -82,7 +92,20 @@ func WriteTarArchive(w io.Writer, srcDir string, uid, gid int) error {
 func addParentDirs(tarDir string, tw *tar.Writer, uid, gid int) error {
 	parent := filepath.Dir(tarDir)
 	if parent == "." || parent == "c:\\" || parent == "\\" || parent == "/" {
-		return nil
+		if err := tw.WriteHeader(&tar.Header{
+			Typeflag: tar.TypeDir,
+			Name:     "Files",
+			Mode:     0755,
+			ModTime:  time.Date(1980, time.January, 1, 0, 0, 1, 0, time.UTC),
+		}); err != nil {
+			return err
+		}
+		return tw.WriteHeader(&tar.Header{
+			Typeflag: tar.TypeDir,
+			Name:     "Hives",
+			Mode:     0755,
+			ModTime:  time.Date(1980, time.January, 1, 0, 0, 1, 0, time.UTC),
+		})
 	}
 
 	if err := addParentDirs(parent, tw, uid, gid); err != nil {
@@ -98,7 +121,11 @@ func addParentDirs(tarDir string, tw *tar.Writer, uid, gid int) error {
 	if err != nil {
 		return err
 	}
-	header.Name = parent
+	if runtime.GOOS == "windows" {
+		header.Name = path.Join("Files", filepath.ToSlash(parent))
+	} else {
+		header.Name = parent
+	}
 	header.ModTime = time.Date(1980, time.January, 1, 0, 0, 1, 0, time.UTC)
 
 	return tw.WriteHeader(header)

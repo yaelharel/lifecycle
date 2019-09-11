@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -50,11 +51,22 @@ func (l *Launcher) Launch(self string, cmd []string) error {
 	if err != nil {
 		return errors.Wrap(err, "determine profile")
 	}
-	if err := l.Exec("/bin/bash", append([]string{
+
+	shell := "/bin/bash"
+	args := []string{
 		"bash", "-c",
 		launcher, self, process.Command,
-	}, process.Args...), l.Env.List()); err != nil {
-		return errors.Wrap(err, "bash exec")
+	}
+
+	if runtime.GOOS == "windows" {
+		shell = "cmd"
+		args = []string{
+			"cmd", "/c",
+			launcher, self, process.Command,
+		}
+	}
+	if err := l.Exec(shell, append(args, process.Args...), l.Env.List()); err != nil {
+		return errors.Wrap(err, "exec command")
 	}
 	return nil
 }
@@ -129,7 +141,11 @@ func (l *Launcher) profileD() (string, error) {
 		return "", err
 	}
 
-	out = append(out, `exec bash -c "$@"`)
+	if runtime.GOOS == "windows" {
+		out = append(out, `cmd /c "$@"`)
+	} else {
+		out = append(out, `exec bash -c "$@"`)
+	}
 	return strings.Join(out, "\n"), nil
 }
 
