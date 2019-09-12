@@ -62,7 +62,7 @@ func (l *Launcher) Launch(self string, cmd []string) error {
 		shell = "cmd"
 		args = []string{
 			"cmd", "/c",
-			launcher, self, process.Command,
+			process.Command,
 		}
 	}
 	if err := l.Exec(shell, append(args, process.Args...), l.Env.List()); err != nil {

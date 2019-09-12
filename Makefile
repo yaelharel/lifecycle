@@ -26,12 +26,12 @@ all: test build package
 build:
 	@echo "> Building lifecycle..."
 	mkdir -p ./out/$(ARCHIVE_NAME)
-	$(GOENV) $(GOBUILD) -o ./out/lifecycle/detector -a ./cmd/detector
-	$(GOENV) $(GOBUILD) -o ./out/lifecycle/restorer -a ./cmd/restorer
-	$(GOENV) $(GOBUILD) -o ./out/lifecycle/analyzer -a ./cmd/analyzer
-	$(GOENV) $(GOBUILD) -o ./out/lifecycle/builder -a ./cmd/builder
-	$(GOENV) $(GOBUILD) -o ./out/lifecycle/exporter -a ./cmd/exporter
-	$(GOENV) $(GOBUILD) -o ./out/lifecycle/cacher -a ./cmd/cacher
+#	$(GOENV) $(GOBUILD) -o ./out/lifecycle/detector -a ./cmd/detector
+#	$(GOENV) $(GOBUILD) -o ./out/lifecycle/restorer -a ./cmd/restorer
+#	$(GOENV) $(GOBUILD) -o ./out/lifecycle/analyzer -a ./cmd/analyzer
+#	$(GOENV) $(GOBUILD) -o ./out/lifecycle/builder -a ./cmd/builder
+#	$(GOENV) $(GOBUILD) -o ./out/lifecycle/exporter -a ./cmd/exporter
+#	$(GOENV) $(GOBUILD) -o ./out/lifecycle/cacher -a ./cmd/cacher
 	$(GOENV) $(GOBUILD) -o ./out/lifecycle/launcher -a ./cmd/launcher
 
 descriptor: export LIFECYCLE_DESCRIPTOR:=$(LIFECYCLE_DESCRIPTOR)

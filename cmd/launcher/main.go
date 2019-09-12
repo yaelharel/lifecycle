@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-	"os/exec"
 	"runtime"
 	"syscall"
 
@@ -58,27 +57,9 @@ func launch() error {
 		Environ:   os.Environ,
 		Map:       lifecycle.POSIXLaunchEnv,
 	}
-
-	execf := syscall.Exec
+	exec := syscall.Exec
 	if runtime.GOOS == "windows" {
-		execf := func(argv0 string, argv []string, envv []string) (err error) {
-			p, _ := syscall.GetCurrentProcess()
-			fd := make([]syscall.Handle, 3)
-			for i, file := range []*os.File{os.Stdin, os.Stdout, os.Stderr} {
-				err := syscall.DuplicateHandle(p, syscall.Handle(file.Fd()), p, &fd[i], 0, true, syscall.DUPLICATE_SAME_ACCESS)
-				if err != nil {
-					return err
-				}
-				defer syscall.CloseHandle(syscall.Handle(fd[i]))
-			}
-			pid, handle, err := syscall.StartProcess(argv0, argv, &syscall.ProcAttr{
-				Dir: appDir,
-				Env: envv,
-			})
-			if err != nil {
-				return err
-			}
-		}
+		exec = lifecycle.ExecW
 	}
 	launcher := &lifecycle.Launcher{
 		DefaultProcessType: defaultProcessType,
@@ -87,7 +68,7 @@ func launch() error {
 		Processes:          md.Processes,
 		Buildpacks:         md.Buildpacks,
 		Env:                env,
-		Exec:               execf,
+		Exec:               exec,
 	}
 
 	if err := launcher.Launch(os.Args[0], os.Args[1:]); err != nil {

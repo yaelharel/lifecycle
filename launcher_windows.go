@@ -1,23 +1,22 @@
 package lifecycle
 
 import (
+	"fmt"
 	"os"
-	"syscall"
+	"os/exec"
 )
 
-func ExecW(argv0 string, argv []string, envv []string) (err error) {
-	dir, err := os.Getwd()
+func ExecW(argv0 string, argv []string, envv []string) error {
+	cmd := exec.Command(argv0, argv[1:]...)
+	fmt.Println("ARGS:", cmd.Args)
+	cmd.Env = envv
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
 	if err != nil {
-		return err
+		fmt.Println("ERROR:", err)
+		os.Exit(cmd.ProcessState.ExitCode())
 	}
-	pid, handle, err := syscall.StartProcess(argv0, argv, &syscall.ProcAttr{
-		Dir: dir,
-		Env: envv,
-		Files: []uintptr{
-			uintptr(syscall.Stdin),
-			uintptr(syscall.Stdout),
-			uintptr(syscall.Stderr),
-		},
-	})
-	syscall.WaitForSingleObject(handle, )
+	return nil
 }
