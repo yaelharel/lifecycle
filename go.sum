@@ -20,6 +20,10 @@ github.com/aybabtme/rgbterm v0.0.0-20170906152045-cc83f3b3ce59 h1:WWB576BN5zNSZc
 github.com/aybabtme/rgbterm v0.0.0-20170906152045-cc83f3b3ce59/go.mod h1:q/89r3U2H7sSsE2t6Kca0lfwTK8JdoNGS/yzM/4iH5I=
 github.com/buildpacks/imgutil v0.0.0-20200203165119-4b0611f06e49 h1:890vJi0wP9VQK1/EOnFV6Zvf9pSnRkeJD0s1SV1N8yg=
 github.com/buildpacks/imgutil v0.0.0-20200203165119-4b0611f06e49/go.mod h1:E3lXJcNXcRefJQAHW5rqboonet+jtOml4qImbJhYGAo=
+github.com/buildpacks/imgutil v0.0.0-20200221183153-5dad5ebadd2b h1:XiKl4/xR8wJp1m3opIAlsSX9G5klKtMR7TKZLIzk++M=
+github.com/buildpacks/imgutil v0.0.0-20200221183153-5dad5ebadd2b/go.mod h1:E3lXJcNXcRefJQAHW5rqboonet+jtOml4qImbJhYGAo=
+github.com/buildpacks/imgutil v0.0.0-20200221191924-373fb84aedc5 h1:z5ZYLop3s7SBcq0kchwNK3zwIJcJgbAH9auulCAw8Y8=
+github.com/buildpacks/imgutil v0.0.0-20200221191924-373fb84aedc5/go.mod h1:E3lXJcNXcRefJQAHW5rqboonet+jtOml4qImbJhYGAo=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/containerd/containerd v1.3.0 h1:xjvXQWABwS2uiv3TWgQt5Uth60Gu86LTGZXMJkjc7rY=
 github.com/containerd/containerd v1.3.0/go.mod h1:bC6axHOhabU15QhwfG7w5PipXdVtMXFTttgp+kVtyUA=
