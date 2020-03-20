@@ -18,15 +18,15 @@ import (
 
 var buildDir string
 
-func TestAcceptance(t *testing.T) {
+func TestVersion(t *testing.T) {
 	var err error
 	buildDir, err = ioutil.TempDir("", "lifecycle-acceptance")
 	h.AssertNil(t, err)
 	defer func() {
 		h.AssertNil(t, os.RemoveAll(buildDir))
 	}()
-	buildBinaries(t, buildDir)
-	spec.Run(t, "acceptance", testAcceptance, spec.Parallel(), spec.Report(report.Terminal{}))
+	buildBinaries(t, buildDir, runtime.GOOS)
+	spec.Run(t, "acceptance", testVersion, spec.Parallel(), spec.Report(report.Terminal{}))
 }
 
 type testCase struct {
@@ -35,7 +35,7 @@ type testCase struct {
 	args        []string
 }
 
-func testAcceptance(t *testing.T, when spec.G, it spec.S) {
+func testVersion(t *testing.T, when spec.G, it spec.S) {
 	when("All", func() {
 		when("CNB_PLATFORM_API is set and incompatible", func() {
 			for _, binary := range []string{
@@ -157,19 +157,19 @@ func lifecycleCmd(binary string, args ...string) *exec.Cmd {
 	return exec.Command(filepath.Join(buildDir, runtime.GOOS, "lifecycle", binary), args...)
 }
 
-func buildBinaries(t *testing.T, dir string) {
+func buildBinaries(t *testing.T, dir string, goos string) {
 	cmd := exec.Command("make", "build-"+runtime.GOOS)
 	wd, err := os.Getwd()
 	h.AssertNil(t, err)
 	cmd.Dir = filepath.Join(wd, "..")
-	cmd.Env = append(
-		os.Environ(),
-		"PWD="+cmd.Dir,
-		"BUILD_DIR="+dir,
+	cmd.Env = []string{
+		"GOOS=" + goos,
+		"PWD=" + cmd.Dir,
+		"BUILD_DIR=" + dir,
 		"PLATFORM_API=0.9",
 		"LIFECYCLE_VERSION=some-version",
 		"SCM_COMMIT=asdf123",
-	)
+	}
 
 	t.Log("Building binaries: ", cmd.Args)
 	if output, err := cmd.CombinedOutput(); err != nil {

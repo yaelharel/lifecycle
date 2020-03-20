@@ -1,0 +1,9 @@
+[[processes]]
+  type = "web"
+  command = "echo \"Executing web process-type\""
+  direct = false
+
+[[processes]]
+  type = "other-process"
+  command = "echo \"Executing other-process process-type\""
+  direct = false
