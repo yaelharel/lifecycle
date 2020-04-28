@@ -15,6 +15,7 @@ import (
 
 	"github.com/buildpacks/lifecycle/archive"
 	"github.com/buildpacks/lifecycle/cmd"
+	"github.com/buildpacks/lifecycle/image"
 	"github.com/buildpacks/lifecycle/launch"
 )
 
@@ -29,11 +30,12 @@ type Cache interface {
 }
 
 type Exporter struct {
-	Buildpacks   []Buildpack
-	ArtifactsDir string
-	Logger       Logger
-	UID, GID     int
-	tarHashes    map[string]string // Stores hashes of layer tarballs for reuse between the export and cache steps.
+	Buildpacks         []Buildpack
+	ArtifactsDir       string
+	Logger             Logger
+	UID, GID           int
+	LayerWriterFactory *image.LayerWriterFactory
+	tarHashes          map[string]string // Stores hashes of layer tarballs for reuse between the export and cache steps.
 }
 
 type LauncherConfig struct {
@@ -285,7 +287,7 @@ func (e *Exporter) tarLayer(layer identifiableLayer) (string, string, error) {
 		return tarPath, sha, nil
 	}
 	e.Logger.Debugf("Writing tarball for layer %q\n", layer.Identifier())
-	sha, err := archive.WriteTarFile(layer.Path(), tarPath, e.UID, e.GID)
+	sha, err := archive.WriteTarFile(layer.Path(), tarPath, e.UID, e.GID, e.LayerWriterFactory)
 	if err != nil {
 		return "", "", err
 	}
@@ -294,6 +296,7 @@ func (e *Exporter) tarLayer(layer identifiableLayer) (string, string, error) {
 }
 
 func (e *Exporter) addOrReuseLayer(image imgutil.Image, layer identifiableLayer, previousSHA string) (string, error) {
+	e.Logger.Info("******************* add/reuse layer: "+layer.Path())
 	tarPath, sha, err := e.tarLayer(layer)
 	if err != nil {
 		return "", errors.Wrapf(err, "tarring layer '%s'", layer.Identifier())
@@ -354,7 +357,7 @@ func (e *Exporter) createAppSliceLayers(appDir string, slices []Slice) ([]SliceL
 	// |  app dir  |
 	// -------------
 	tarPath := filepath.Join(e.ArtifactsDir, "app.tar")
-	sha, err := archive.WriteTarFile(appDir, tarPath, e.UID, e.GID)
+	sha, err := archive.WriteTarFile(appDir, tarPath, e.UID, e.GID, e.LayerWriterFactory)
 	if err != nil {
 		return nil, errors.Wrapf(err, "exporting layer 'app'")
 	}
@@ -368,7 +371,7 @@ func (e *Exporter) createAppSliceLayers(appDir string, slices []Slice) ([]SliceL
 
 func (e *Exporter) createSliceLayer(appDir, layerID string, files []string) (SliceLayer, error) {
 	tarPath := filepath.Join(e.ArtifactsDir, launch.EscapeID(layerID)+".tar")
-	sha, fileSet, err := archive.WriteFilesToTar(tarPath, e.UID, e.GID, files...)
+	sha, fileSet, err := archive.WriteFilesToTar(tarPath, e.UID, e.GID, e.LayerWriterFactory, files...)
 	if err != nil {
 		return SliceLayer{}, errors.Wrapf(err, "exporting slice layer '%s'", layerID)
 	}

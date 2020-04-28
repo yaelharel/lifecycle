@@ -7,11 +7,22 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"time"
 )
 
-func WriteFilesToTar(dest string, uid, gid int, files ...string) (string, map[string]struct{}, error) {
+type TarWriter interface {
+	WriteHeader(hdr *tar.Header) error
+	Write(b []byte) (int, error)
+	Close() error
+}
+
+type WriterFactory interface {
+	NewWriter(io.Writer) TarWriter
+}
+
+func WriteFilesToTar(dest string, uid, gid int, wf WriterFactory, files ...string) (string, map[string]struct{}, error) {
 	hasher := newConcurrentHasher(sha256.New())
 	f, err := os.Create(dest)
 	if err != nil {
@@ -20,7 +31,7 @@ func WriteFilesToTar(dest string, uid, gid int, files ...string) (string, map[st
 	defer f.Close()
 
 	w := io.MultiWriter(hasher, f)
-	tw := tar.NewWriter(w)
+	tw := wf.NewWriter(w)
 
 	fileSet := map[string]struct{}{}
 	for _, file := range files {
@@ -33,7 +44,7 @@ func WriteFilesToTar(dest string, uid, gid int, files ...string) (string, map[st
 	return fmt.Sprintf("sha256:%x", hasher.Sum(nil)), fileSet, nil
 }
 
-func AddFileToArchive(tw *tar.Writer, srcDir string, uid, gid int, fileSet map[string]struct{}) error {
+func AddFileToArchive(tw TarWriter, srcDir string, uid, gid int, fileSet map[string]struct{}) error {
 	err := addParentDirsUnique(srcDir, tw, uid, gid, fileSet)
 	if err != nil {
 		return err
@@ -87,7 +98,7 @@ func AddFileToArchive(tw *tar.Writer, srcDir string, uid, gid int, fileSet map[s
 	})
 }
 
-func WriteTarFile(sourceDir, dest string, uid, gid int) (string, error) {
+func WriteTarFile(sourceDir, dest string, uid, gid int, wf WriterFactory) (string, error) {
 	f, err := os.Create(dest)
 	if err != nil {
 		return "", err
@@ -97,7 +108,7 @@ func WriteTarFile(sourceDir, dest string, uid, gid int) (string, error) {
 	hasher := newConcurrentHasher(sha256.New())
 	w := bufio.NewWriterSize(io.MultiWriter(hasher, f), 1024*1024)
 
-	if err := WriteTarArchive(w, sourceDir, uid, gid); err != nil {
+	if err := WriteTarArchive(w, wf, sourceDir, uid, gid); err != nil {
 		return "", err
 	}
 
@@ -108,10 +119,10 @@ func WriteTarFile(sourceDir, dest string, uid, gid int) (string, error) {
 	return fmt.Sprintf("sha256:%x", hasher.Sum(nil)), nil
 }
 
-func WriteTarArchive(w io.Writer, srcDir string, uid, gid int) error {
+func WriteTarArchive(w io.Writer, wf WriterFactory, srcDir string, uid, gid int) error {
 	srcDir = filepath.Clean(srcDir)
 
-	tw := tar.NewWriter(w)
+	tw := wf.NewWriter(w)
 	defer tw.Close()
 
 	err := addParentDirs(srcDir, tw, uid, gid)
@@ -162,7 +173,7 @@ func WriteTarArchive(w io.Writer, srcDir string, uid, gid int) error {
 	})
 }
 
-func addParentDirsUnique(tarDir string, tw *tar.Writer, uid, gid int, parentDirs map[string]struct{}) error {
+func addParentDirsUnique(tarDir string, tw TarWriter, uid, gid int, parentDirs map[string]struct{}) error {
 	parent := filepath.Dir(tarDir)
 	if parent == "." || parent == "/" {
 		return nil
@@ -193,8 +204,8 @@ func addParentDirsUnique(tarDir string, tw *tar.Writer, uid, gid int, parentDirs
 	return tw.WriteHeader(header)
 }
 
-func addParentDirs(tarDir string, tw *tar.Writer, uid, gid int) error {
-	parent := filepath.Dir(tarDir)
+func addParentDirs(tarDir string, tw TarWriter, uid, gid int) error {
+	parent := path.Dir(tarDir)
 	if parent == "." || parent == "/" {
 		return nil
 	}

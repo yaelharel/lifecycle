@@ -70,6 +70,7 @@ build-windows:
 	$(GOENV) $(GOBUILD) -o $(OUT_DIR)/launcher -a ./cmd/launcher
 	test $$(du -m $(OUT_DIR)/launcher|cut -f 1) -le 3
 	$(GOENV) $(GOBUILD) -o $(OUT_DIR)/lifecycle.exe -a ./cmd/lifecycle
+	ln -sf lifecycle.exe $(OUT_DIR)/detector.exe
 	ln -sf lifecycle.exe $(OUT_DIR)/analyzer.exe
 	ln -sf lifecycle.exe $(OUT_DIR)/restorer.exe
 	ln -sf lifecycle.exe $(OUT_DIR)/builder.exe
