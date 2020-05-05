@@ -296,7 +296,7 @@ func (e *Exporter) tarLayer(layer identifiableLayer) (string, string, error) {
 }
 
 func (e *Exporter) addOrReuseLayer(image imgutil.Image, layer identifiableLayer, previousSHA string) (string, error) {
-	e.Logger.Info("******************* add/reuse layer: "+layer.Path())
+	// e.Logger.Info("******************* add/reuse layer: "+layer.Path())
 	tarPath, sha, err := e.tarLayer(layer)
 	if err != nil {
 		return "", errors.Wrapf(err, "tarring layer '%s'", layer.Identifier())

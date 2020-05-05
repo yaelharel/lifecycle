@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
 	"time"
 )
@@ -20,6 +19,16 @@ type TarWriter interface {
 
 type WriterFactory interface {
 	NewWriter(io.Writer) TarWriter
+}
+
+type defaultTarWriterFactory struct{}
+
+func (defaultTarWriterFactory) NewWriter(w io.Writer) TarWriter {
+	return tar.NewWriter(w)
+}
+
+func DefaultTarWriterFactory() WriterFactory {
+	return defaultTarWriterFactory{}
 }
 
 func WriteFilesToTar(dest string, uid, gid int, wf WriterFactory, files ...string) (string, map[string]struct{}, error) {
@@ -72,7 +81,7 @@ func AddFileToArchive(tw TarWriter, srcDir string, uid, gid int, fileSet map[str
 		if err != nil {
 			return err
 		}
-		header.Name = file
+		header.Name = TarPath(file)
 		header.ModTime = time.Date(1980, time.January, 1, 0, 0, 1, 0, time.UTC)
 		header.Uid = uid
 		header.Gid = gid
@@ -149,7 +158,7 @@ func WriteTarArchive(w io.Writer, wf WriterFactory, srcDir string, uid, gid int)
 		if err != nil {
 			return err
 		}
-		header.Name = file
+		header.Name = TarPath(file)
 		header.ModTime = time.Date(1980, time.January, 1, 0, 0, 1, 0, time.UTC)
 		header.Uid = uid
 		header.Gid = gid
@@ -175,7 +184,8 @@ func WriteTarArchive(w io.Writer, wf WriterFactory, srcDir string, uid, gid int)
 
 func addParentDirsUnique(tarDir string, tw TarWriter, uid, gid int, parentDirs map[string]struct{}) error {
 	parent := filepath.Dir(tarDir)
-	if parent == "." || parent == "/" {
+	// fmt.Printf("tarDir: %s, parent: %s\n", tarDir, parent)
+	if parent == "." || parent == filepath.VolumeName(tarDir)+string(filepath.Separator) {
 		return nil
 	}
 
@@ -196,7 +206,7 @@ func addParentDirsUnique(tarDir string, tw TarWriter, uid, gid int, parentDirs m
 	if err != nil {
 		return err
 	}
-	header.Name = parent
+	header.Name = TarPath(parent)
 	header.ModTime = time.Date(1980, time.January, 1, 0, 0, 1, 0, time.UTC)
 
 	parentDirs[parent] = struct{}{}
@@ -205,8 +215,9 @@ func addParentDirsUnique(tarDir string, tw TarWriter, uid, gid int, parentDirs m
 }
 
 func addParentDirs(tarDir string, tw TarWriter, uid, gid int) error {
-	parent := path.Dir(tarDir)
-	if parent == "." || parent == "/" {
+	parent := filepath.Dir(tarDir)
+	// fmt.Printf("tarDir: %s, parent: %s\n", tarDir, parent)
+	if parent == "." || parent == filepath.VolumeName(tarDir)+string(filepath.Separator) {
 		return nil
 	}
 
@@ -223,7 +234,8 @@ func addParentDirs(tarDir string, tw TarWriter, uid, gid int) error {
 	if err != nil {
 		return err
 	}
-	header.Name = parent
+
+	header.Name = TarPath(parent)
 	header.ModTime = time.Date(1980, time.January, 1, 0, 0, 1, 0, time.UTC)
 
 	return tw.WriteHeader(header)

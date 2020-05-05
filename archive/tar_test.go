@@ -117,7 +117,7 @@ func testTar(t *testing.T, when spec.G, it spec.S) {
 				h.AssertNil(t, err)
 				defer file.Close()
 
-				h.AssertNil(t, archive.WriteTarArchive(file, src, uid, gid))
+				h.AssertNil(t, archive.WriteTarArchive(file, archive.DefaultTarWriterFactory(), src, uid, gid))
 				h.AssertNil(t, file.Close())
 
 				file, err = os.Open(file.Name())
@@ -184,7 +184,7 @@ func testTar(t *testing.T, when spec.G, it spec.S) {
 				h.AssertNil(t, err)
 				defer file.Close()
 
-				h.AssertNil(t, archive.WriteTarArchive(file, absoluteFilePath, 1234, 5678))
+				h.AssertNil(t, archive.WriteTarArchive(file, archive.DefaultTarWriterFactory(), absoluteFilePath, 1234, 5678))
 				h.AssertNil(t, file.Close())
 
 				file, err = os.Open(file.Name())
@@ -217,7 +217,7 @@ func testTar(t *testing.T, when spec.G, it spec.S) {
 				h.AssertNil(t, err)
 				defer file.Close()
 
-				h.AssertNil(t, archive.WriteTarArchive(file, relativePath, 1234, 5678))
+				h.AssertNil(t, archive.WriteTarArchive(file, archive.DefaultTarWriterFactory(), relativePath, 1234, 5678))
 				h.AssertNil(t, file.Close())
 
 				file, err = os.Open(file.Name())
@@ -250,7 +250,7 @@ func testTar(t *testing.T, when spec.G, it spec.S) {
 			h.AssertNil(t, err)
 			defer file.Close()
 
-			h.AssertNil(t, archive.WriteTarArchive(file, src, 1234, 5678))
+			h.AssertNil(t, archive.WriteTarArchive(file, archive.DefaultTarWriterFactory(), src, 1234, 5678))
 			h.AssertNil(t, file.Close())
 
 			file, err = os.Open(file.Name())

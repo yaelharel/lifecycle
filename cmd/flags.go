@@ -8,19 +8,20 @@ import (
 )
 
 const (
-	DefaultLayersDir           = "/layers"
-	DefaultAppDir              = "/workspace"
-	DefaultBuildpacksDir       = "/cnb/buildpacks"
-	DefaultPlatformDir         = "/platform"
-	DefaultOrderPath           = "/cnb/order.toml"
-	DefaultGroupPath           = "./group.toml"
-	DefaultStackPath           = "/cnb/stack.toml"
-	DefaultAnalyzedPath        = "./analyzed.toml"
-	DefaultPlanPath            = "./plan.toml"
+	// TODO: Make OS-dependent
+	DefaultLayersDir           = "c:\\layers"
+	DefaultAppDir              = "c:\\workspace"
+	DefaultBuildpacksDir       = "c:\\cnb\\buildpacks"
+	DefaultPlatformDir         = "c:\\platform"
+	DefaultOrderPath           = "c:\\cnb\\order.toml"
+	DefaultGroupPath           = ".\\group.toml"
+	DefaultStackPath           = "c:\\cnb\\stack.toml"
+	DefaultAnalyzedPath        = ".\\analyzed.toml"
+	DefaultPlanPath            = ".\\plan.toml"
 	DefaultProcessType         = "web"
-	DefaultLauncherPath        = "/cnb/lifecycle/launcher"
+	DefaultLauncherPath        = "c:\\cnb\\lifecycle\\launcher"
 	DefaultLogLevel            = "info"
-	DefaultProjectMetadataPath = "./project-metadata.toml"
+	DefaultProjectMetadataPath = ".\\project-metadata.toml"
 
 	EnvLayersDir           = "CNB_LAYERS_DIR"
 	EnvAppDir              = "CNB_APP_DIR"

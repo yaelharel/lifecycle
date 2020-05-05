@@ -20,3 +20,5 @@ require (
 )
 
 go 1.14
+
+replace github.com/buildpacks/imgutil => ../imgutil
