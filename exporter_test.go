@@ -24,6 +24,7 @@ import (
 	"github.com/sclevine/spec/report"
 
 	"github.com/buildpacks/lifecycle"
+	"github.com/buildpacks/lifecycle/archive"
 	"github.com/buildpacks/lifecycle/cache"
 	h "github.com/buildpacks/lifecycle/testhelpers"
 )
@@ -88,9 +89,10 @@ func testExporter(t *testing.T, when spec.G, it spec.S) {
 				{ID: "buildpack.id", Version: "1.2.3"},
 				{ID: "other.buildpack.id", Version: "4.5.6", Optional: false},
 			},
-			Logger: &log.Logger{Handler: logHandler},
-			UID:    uid,
-			GID:    gid,
+			Logger:             &log.Logger{Handler: logHandler},
+			UID:                uid,
+			GID:                gid,
+			LayerWriterFactory: archive.DefaultTarWriterFactory(),
 		}
 	})
 
@@ -1168,9 +1170,10 @@ type = "Apache-2.0"
 					{ID: "buildpack.id"},
 					{ID: "other.buildpack.id"},
 				},
-				Logger: &log.Logger{Handler: &discard.Handler{}},
-				UID:    1234,
-				GID:    4321,
+				Logger:             &log.Logger{Handler: &discard.Handler{}},
+				UID:                1234,
+				GID:                4321,
+				LayerWriterFactory: archive.DefaultTarWriterFactory(),
 			}
 		})
 

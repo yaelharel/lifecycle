@@ -15,7 +15,6 @@ import (
 
 	"github.com/buildpacks/lifecycle/archive"
 	"github.com/buildpacks/lifecycle/cmd"
-	"github.com/buildpacks/lifecycle/image"
 	"github.com/buildpacks/lifecycle/launch"
 )
 
@@ -34,7 +33,7 @@ type Exporter struct {
 	ArtifactsDir       string
 	Logger             Logger
 	UID, GID           int
-	LayerWriterFactory *image.LayerWriterFactory
+	LayerWriterFactory archive.WriterFactory
 	tarHashes          map[string]string // Stores hashes of layer tarballs for reuse between the export and cache steps.
 }
 

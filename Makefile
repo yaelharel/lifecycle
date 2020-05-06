@@ -95,19 +95,19 @@ build-darwin:
 
 install-goimports:
 	@echo "> Installing goimports..."
-	cd tools; $(GOCMD) install golang.org/x/tools/cmd/goimports
+	cd tools && $(GOCMD) install golang.org/x/tools/cmd/goimports
 
 install-yj:
 	@echo "> Installing yj..."
-	cd tools; $(GOCMD) install github.com/sclevine/yj
+	cd tools && $(GOCMD) install github.com/sclevine/yj
 
 install-mockgen:
 	@echo "> Installing mockgen..."
-	cd tools; $(GOCMD) install github.com/golang/mock/mockgen
+	cd tools && $(GOCMD) install github.com/golang/mock/mockgen
 
 install-golangci-lint:
 	@echo "> Installing golangci-lint..."
-	cd tools; $(GOCMD) install github.com/golangci/golangci-lint/cmd/golangci-lint
+	cd tools && $(GOCMD) install github.com/golangci/golangci-lint/cmd/golangci-lint
 
 lint: install-golangci-lint
 	@echo "> Linting code..."
@@ -122,14 +122,9 @@ format: install-goimports
 	@echo "> Formating code..."
 	test -z $$(goimports -l -w -local github.com/buildpacks/lifecycle .)
 
-verify-jq:
-ifeq (, $(shell which jq))
-	$(error "No jq in $$PATH, please install jq")
-endif
-
 test: unit acceptance
 
-unit: verify-jq format lint install-yj
+unit: format lint install-yj
 	@echo "> Running unit tests..."
 	$(GOTEST) -v -count=1 ./...
 
@@ -170,5 +165,3 @@ package-windows:
 
 	@echo "> Packaging lifecycle for $(GOOS)..."
 	tar czf $(BUILD_DIR)/$(ARCHIVE_NAME).tgz -C $(GOOS_DIR) lifecycle.toml lifecycle
-
-.PHONY: verify-jq
