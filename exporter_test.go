@@ -170,13 +170,13 @@ func testExporter(t *testing.T, when spec.G, it spec.S) {
 			it("reuses slice layer if the sha matches the sha in the archive metadata", func() {
 				h.AssertNil(t, exporter.Export(opts))
 
-				sliceLayerPath, err := fakeAppImage.FindLayerWithPath(filepath.Join(opts.AppDir, "static", "misc", "resources", "reports", "report.tps"))
+				sliceLayerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.AppDir, "static", "misc", "resources", "reports", "report.tps"))
 				h.AssertNil(t, err)
 
 				assertTarFileExists(t, sliceLayerPath, filepath.Join(opts.AppDir, "static", "misc", "resources", "reports", "numbers.csv"), true)
 				assertTarFileExists(t, sliceLayerPath, filepath.Join(opts.AppDir, "static", "misc", "resources", "reports", "report.tps"), true)
 
-				appLayerPath, err := fakeAppImage.FindLayerWithPath(filepath.Join(opts.AppDir, ".hidden.txt"))
+				appLayerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.AppDir, ".hidden.txt"))
 				h.AssertNil(t, err)
 
 				assertTarFileExists(t, appLayerPath, filepath.Join(opts.AppDir, "static", "misc", "resources"), false)
@@ -240,7 +240,7 @@ func testExporter(t *testing.T, when spec.G, it spec.S) {
 			it("creates app layer on Run image", func() {
 				h.AssertNil(t, exporter.Export(opts))
 
-				appLayerPath, err := fakeAppImage.FindLayerWithPath(filepath.Join(opts.AppDir, ".hidden.txt"))
+				appLayerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.AppDir, ".hidden.txt"))
 				h.AssertNil(t, err)
 
 				assertTarFileContents(t, appLayerPath, filepath.Join(opts.AppDir, ".hidden.txt"), "some-hidden-text\n")
@@ -251,7 +251,7 @@ func testExporter(t *testing.T, when spec.G, it spec.S) {
 			it("creates config layer on Run image", func() {
 				h.AssertNil(t, exporter.Export(opts))
 
-				configLayerPath, err := fakeAppImage.FindLayerWithPath(filepath.Join(opts.LayersDir, "config", "metadata.toml"))
+				configLayerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "config", "metadata.toml"))
 				h.AssertNil(t, err)
 
 				assertTarFileContents(t,
@@ -289,7 +289,7 @@ func testExporter(t *testing.T, when spec.G, it spec.S) {
 			it("adds new launch layers", func() {
 				h.AssertNil(t, exporter.Export(opts))
 
-				layer2Path, err := fakeAppImage.FindLayerWithPath(filepath.Join(opts.LayersDir, "buildpack.id/new-launch-layer"))
+				layer2Path, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "buildpack.id/new-launch-layer"))
 				h.AssertNil(t, err)
 
 				assertTarFileContents(t,
@@ -303,7 +303,7 @@ func testExporter(t *testing.T, when spec.G, it spec.S) {
 			it("adds new launch layers from a second buildpack", func() {
 				h.AssertNil(t, exporter.Export(opts))
 
-				layer3Path, err := fakeAppImage.FindLayerWithPath(filepath.Join(opts.LayersDir, "other.buildpack.id/new-launch-layer"))
+				layer3Path, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "other.buildpack.id/new-launch-layer"))
 				h.AssertNil(t, err)
 
 				assertTarFileContents(t,
@@ -331,19 +331,19 @@ func testExporter(t *testing.T, when spec.G, it spec.S) {
 			it("saves lifecycle metadata with layer info", func() {
 				h.AssertNil(t, exporter.Export(opts))
 
-				appLayerPath, err := fakeAppImage.FindLayerWithPath(filepath.Join(opts.AppDir, ".hidden.txt"))
+				appLayerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.AppDir, ".hidden.txt"))
 				h.AssertNil(t, err)
 				appLayerSHA := h.ComputeSHA256ForFile(t, appLayerPath)
 
-				configLayerPath, err := fakeAppImage.FindLayerWithPath(filepath.Join(opts.LayersDir, "config", "metadata.toml"))
+				configLayerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "config", "metadata.toml"))
 				h.AssertNil(t, err)
 				configLayerSHA := h.ComputeSHA256ForFile(t, configLayerPath)
 
-				newLayerPath, err := fakeAppImage.FindLayerWithPath(filepath.Join(opts.LayersDir, "buildpack.id/new-launch-layer"))
+				newLayerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "buildpack.id/new-launch-layer"))
 				h.AssertNil(t, err)
 				newLayerSHA := h.ComputeSHA256ForFile(t, newLayerPath)
 
-				secondBPLayerPath, err := fakeAppImage.FindLayerWithPath(filepath.Join(opts.LayersDir, "other.buildpack.id/new-launch-layer"))
+				secondBPLayerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "other.buildpack.id/new-launch-layer"))
 				h.AssertNil(t, err)
 				secondBPLayerPathSHA := h.ComputeSHA256ForFile(t, secondBPLayerPath)
 
@@ -755,13 +755,13 @@ type = "Apache-2.0"
 			it("create a slice layer on the Run image", func() {
 				h.AssertNil(t, exporter.Export(opts))
 
-				sliceLayerPath, err := fakeAppImage.FindLayerWithPath(filepath.Join(opts.AppDir, "static", "assets", "config.txt"))
+				sliceLayerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.AppDir, "static", "assets", "config.txt"))
 				h.AssertNil(t, err)
 
 				assertTarFileExists(t, sliceLayerPath, filepath.Join(opts.AppDir, "static", "assets", "config.txt"), true)
 				assertTarFileExists(t, sliceLayerPath, filepath.Join(opts.AppDir, "static", "assets", "logo.svg"), true)
 
-				appLayerPath, err := fakeAppImage.FindLayerWithPath(filepath.Join(opts.AppDir, ".hidden.txt"))
+				appLayerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.AppDir, ".hidden.txt"))
 				h.AssertNil(t, err)
 
 				assertTarFileExists(t, appLayerPath, filepath.Join(opts.AppDir, "static", "assets", "config.txt"), false)
@@ -797,7 +797,7 @@ type = "Apache-2.0"
 			it("creates app layer on Run image", func() {
 				h.AssertNil(t, exporter.Export(opts))
 
-				appLayerPath, err := fakeAppImage.FindLayerWithPath(filepath.Join(opts.AppDir, ".hidden.txt"))
+				appLayerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.AppDir, ".hidden.txt"))
 				h.AssertNil(t, err)
 
 				assertTarFileContents(t, appLayerPath, filepath.Join(opts.AppDir, ".hidden.txt"), "some-hidden-text\n")
@@ -816,7 +816,7 @@ type = "Apache-2.0"
 
 					h.AssertNil(t, exporter.Export(opts))
 
-					appLayerPath, err := fakeAppImage.FindLayerWithPath(filepath.Join(fullAppDir, ".hidden.txt"))
+					appLayerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(fullAppDir, ".hidden.txt"))
 					h.AssertNil(t, err)
 
 					assertTarFileContents(t, appLayerPath, filepath.Join(fullAppDir, ".hidden.txt"), "some-hidden-text\n")
@@ -828,7 +828,7 @@ type = "Apache-2.0"
 			it("creates config layer on Run image", func() {
 				h.AssertNil(t, exporter.Export(opts))
 
-				configLayerPath, err := fakeAppImage.FindLayerWithPath(filepath.Join(opts.LayersDir, "config", "metadata.toml"))
+				configLayerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "config", "metadata.toml"))
 				h.AssertNil(t, err)
 
 				assertTarFileContents(t,
@@ -843,7 +843,7 @@ type = "Apache-2.0"
 			it("creates a launcher layer", func() {
 				h.AssertNil(t, exporter.Export(opts))
 
-				launcherLayerPath, err := fakeAppImage.FindLayerWithPath(opts.LauncherConfig.Path)
+				launcherLayerPath, err := findLayerWithPath(fakeAppImage, opts.LauncherConfig.Path)
 				h.AssertNil(t, err)
 				assertTarFileContents(t,
 					launcherLayerPath,
@@ -856,7 +856,7 @@ type = "Apache-2.0"
 			it("adds launch layers", func() {
 				h.AssertNil(t, exporter.Export(opts))
 
-				layer1Path, err := fakeAppImage.FindLayerWithPath(filepath.Join(opts.LayersDir, "buildpack.id/layer1"))
+				layer1Path, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "buildpack.id/layer1"))
 				h.AssertNil(t, err)
 				assertTarFileContents(t,
 					layer1Path,
@@ -865,7 +865,7 @@ type = "Apache-2.0"
 				assertTarFileOwner(t, layer1Path, filepath.Join(opts.LayersDir, "buildpack.id/layer1"), uid, gid)
 				assertAddLayerLog(t, logHandler, "buildpack.id:layer1", layer1Path)
 
-				layer2Path, err := fakeAppImage.FindLayerWithPath(filepath.Join(opts.LayersDir, "buildpack.id/layer2"))
+				layer2Path, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "buildpack.id/layer2"))
 				h.AssertNil(t, err)
 				assertTarFileContents(t,
 					layer2Path,
@@ -885,23 +885,23 @@ type = "Apache-2.0"
 			it("saves metadata with layer info", func() {
 				h.AssertNil(t, exporter.Export(opts))
 
-				appLayerPath, err := fakeAppImage.FindLayerWithPath(filepath.Join(opts.AppDir, ".hidden.txt"))
+				appLayerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.AppDir, ".hidden.txt"))
 				h.AssertNil(t, err)
 				appLayerSHA := h.ComputeSHA256ForFile(t, appLayerPath)
 
-				configLayerPath, err := fakeAppImage.FindLayerWithPath(filepath.Join(opts.LayersDir, "config", "metadata.toml"))
+				configLayerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "config", "metadata.toml"))
 				h.AssertNil(t, err)
 				configLayerSHA := h.ComputeSHA256ForFile(t, configLayerPath)
 
-				launcherLayerPath, err := fakeAppImage.FindLayerWithPath(opts.LauncherConfig.Path)
+				launcherLayerPath, err := findLayerWithPath(fakeAppImage, opts.LauncherConfig.Path)
 				h.AssertNil(t, err)
 				launcherLayerSHA := h.ComputeSHA256ForFile(t, launcherLayerPath)
 
-				layer1Path, err := fakeAppImage.FindLayerWithPath(filepath.Join(opts.LayersDir, "buildpack.id/layer1"))
+				layer1Path, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "buildpack.id/layer1"))
 				h.AssertNil(t, err)
 				buildpackLayer1SHA := h.ComputeSHA256ForFile(t, layer1Path)
 
-				layer2Path, err := fakeAppImage.FindLayerWithPath(filepath.Join(opts.LayersDir, "buildpack.id/layer2"))
+				layer2Path, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "buildpack.id/layer2"))
 				h.AssertNil(t, err)
 				buildpackLayer2SHA := h.ComputeSHA256ForFile(t, layer2Path)
 
@@ -1066,7 +1066,7 @@ type = "Apache-2.0"
 			it("exports layers from the escaped id path", func() {
 				h.AssertNil(t, exporter.Export(opts))
 
-				layerPath, err := fakeAppImage.FindLayerWithPath(filepath.Join(opts.LayersDir, "some_escaped_bp_id/some-layer"))
+				layerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "some_escaped_bp_id/some-layer"))
 				h.AssertNil(t, err)
 
 				assertTarFileContents(t,
@@ -1365,7 +1365,7 @@ type = "Apache-2.0"
 						h.AssertNil(t, err)
 					})
 
-					it("doesn't reuse layers", func() {
+					it.Focus("doesn't reuse layers", func() {
 						err := exporter.Cache(layersDir, testCache)
 						h.AssertNil(t, err)
 
@@ -1403,6 +1403,10 @@ type = "Apache-2.0"
 	})
 }
 
+func findLayerWithPath(fakeAppImage *fakes.Image, path string) (string, error) {
+	return fakeAppImage.FindLayerWithPath(archive.TarPath(path))
+}
+
 func assertAddLayerLog(t *testing.T, logHandler *memory.Handler, name, layerPath string) {
 	t.Helper()
 	layerSHA := h.ComputeSHA256ForFile(t, layerPath)
@@ -1430,7 +1434,8 @@ func assertReuseLayerLog(t *testing.T, logHandler *memory.Handler, name, sha str
 
 func assertTarFileContents(t *testing.T, tarfile, path, expected string) {
 	t.Helper()
-	exist, contents := tarFileContext(t, tarfile, path)
+	path = archive.TarPath(path)
+	exist, contents := tarFileContents(t, tarfile, path)
 	if !exist {
 		t.Fatalf("%s does not exist in %s", path, tarfile)
 	}
@@ -1439,15 +1444,16 @@ func assertTarFileContents(t *testing.T, tarfile, path, expected string) {
 
 func assertTarFileExists(t *testing.T, tarfile, path string, expected bool) {
 	t.Helper()
-	exist, _ := tarFileContext(t, tarfile, path)
+	exist, _ := tarFileContents(t, tarfile, path)
 	if !exist {
 		h.AssertEq(t, false, expected)
 	}
 	h.AssertEq(t, exist, expected)
 }
 
-func tarFileContext(t *testing.T, tarfile, path string) (exist bool, contents string) {
+func tarFileContents(t *testing.T, tarfile, path string) (exist bool, contents string) {
 	t.Helper()
+	path = archive.TarPath(path)
 	r, err := os.Open(tarfile)
 	h.AssertNil(t, err)
 	defer func() { h.AssertNil(t, r.Close()) }()
@@ -1471,6 +1477,7 @@ func tarFileContext(t *testing.T, tarfile, path string) (exist bool, contents st
 
 func assertTarFileOwner(t *testing.T, tarfile, path string, expectedUID, expectedGID int) {
 	t.Helper()
+	path = archive.TarPath(path)
 	var foundPath bool
 	r, err := os.Open(tarfile)
 	h.AssertNil(t, err)
