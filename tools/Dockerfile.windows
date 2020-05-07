@@ -1,0 +1,20 @@
+# Purpose: allow testing using only a DOCKER_HOST connectable windows daemon. Uses COPY instead as alternative to complex volume mapping
+# Usage:
+#   docker build --tag lifecycle-test -f tools/Dockerfile.windows . && \
+#   docker run --rm -v gopath:c:/gopath lifecycle-test make test
+FROM golang:1.14-windowsservercore-1809
+
+RUN powershell.exe -Command \
+    Install-PackageProvider -Name NuGet -Force ; \
+    Install-Module chocolatey -Force ; \
+    Install-ChocolateySoftware ; \
+    Install-ChocolateyPackage git,make,mingw,jq -Confirm:$false
+
+# For reusing dependencies `-v gopathcache:c:/gopath`
+VOLUME ["c:/gopath"]
+
+WORKDIR /src
+
+COPY . /src/
+
+
