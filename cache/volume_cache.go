@@ -91,19 +91,16 @@ func (c *VolumeCache) AddLayerFile(tarPath string, diffID string) error {
 	if c.committed {
 		return errCacheCommitted
 	}
-	if _, err := os.Stat(filepath.Join(c.stagingDir, diffID+".tar")); err == nil {
+	layerTar := diffIDPath(c.stagingDir, diffID)
+	if _, err := os.Stat(layerTar); err == nil {
 		// don't waste time rewriting an identical layer
 		return nil
 	}
 
-	if err := copyFile(tarPath, diffIDPath(c.stagingDir, diffID)); err != nil {
+	if err := copyFile(tarPath, layerTar); err != nil {
 		return errors.Wrapf(err, "caching layer (%s)", diffID)
 	}
 	return nil
-}
-
-func diffIDPath(basePath, diffID string) string {
-	return filepath.Join(basePath, strings.TrimPrefix(diffID, "sha256:")+".tar")
 }
 
 func (c *VolumeCache) AddLayer(rc io.ReadCloser, diffID string) error {
@@ -184,6 +181,10 @@ func (c *VolumeCache) Commit() error {
 	}
 
 	return nil
+}
+
+func diffIDPath(basePath, diffID string) string {
+	return filepath.Join(basePath, strings.TrimPrefix(diffID, "sha256:")+".tar")
 }
 
 func (c *VolumeCache) setupStagingDir() error {

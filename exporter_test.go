@@ -31,7 +31,7 @@ import (
 
 func TestExporter(t *testing.T) {
 	rand.Seed(time.Now().UTC().UnixNano())
-	spec.Run(t, "Exporter", testExporter, spec.Parallel(), spec.Report(report.Terminal{}))
+	spec.Run(t, "Exporter", testExporter, spec.Sequential(), spec.Report(report.Terminal{}))
 }
 
 func testExporter(t *testing.T, when spec.G, it spec.S) {
@@ -274,44 +274,44 @@ func testExporter(t *testing.T, when spec.G, it spec.S) {
 				h.AssertNil(t, exporter.Export(opts))
 
 				h.AssertContains(t, fakeAppImage.ReusedLayers(), "sha256:orig-launch-layer-no-local-dir-sha")
-				assertReuseLayerLog(t, logHandler, "buildpack.id:launch-layer-no-local-dir", "orig-launch-layer-no-local-dir-sha")
+				assertReuseLayerLog(t, logHandler, "buildpack.id+launch-layer-no-local-dir", "orig-launch-layer-no-local-dir-sha")
 			})
 
 			it("reuses cached launch layers if the local sha matches the sha in the metadata", func() {
-				layer5sha := h.ComputeSHA256ForPath(t, filepath.Join(opts.LayersDir, "other.buildpack.id/local-reusable-layer"), uid, gid)
+				layer5sha := h.ComputeSHA256ForPath(t, filepath.Join(opts.LayersDir, "other.buildpack.id", "local-reusable-layer"), uid, gid)
 
 				h.AssertNil(t, exporter.Export(opts))
 
 				h.AssertContains(t, fakeAppImage.ReusedLayers(), "sha256:"+layer5sha)
-				assertReuseLayerLog(t, logHandler, "other.buildpack.id:local-reusable-layer", layer5sha)
+				assertReuseLayerLog(t, logHandler, "other.buildpack.id+local-reusable-layer", layer5sha)
 			})
 
 			it("adds new launch layers", func() {
 				h.AssertNil(t, exporter.Export(opts))
 
-				layer2Path, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "buildpack.id/new-launch-layer"))
+				layer2Path, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "buildpack.id", "new-launch-layer"))
 				h.AssertNil(t, err)
 
 				assertTarFileContents(t,
 					layer2Path,
-					filepath.Join(opts.LayersDir, "buildpack.id/new-launch-layer/file-from-new-launch-layer"),
+					filepath.Join(opts.LayersDir, "buildpack.id", "new-launch-layer", "file-from-new-launch-layer"),
 					"echo text from layer 2\n")
-				assertTarFileOwner(t, layer2Path, filepath.Join(opts.LayersDir, "buildpack.id/new-launch-layer"), uid, gid)
-				assertAddLayerLog(t, logHandler, "buildpack.id:new-launch-layer", layer2Path)
+				assertTarFileOwner(t, layer2Path, filepath.Join(opts.LayersDir, "buildpack.id", "new-launch-layer"), uid, gid)
+				assertAddLayerLog(t, logHandler, "buildpack.id+new-launch-layer", layer2Path)
 			})
 
 			it("adds new launch layers from a second buildpack", func() {
 				h.AssertNil(t, exporter.Export(opts))
 
-				layer3Path, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "other.buildpack.id/new-launch-layer"))
+				layer3Path, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "other.buildpack.id", "new-launch-layer"))
 				h.AssertNil(t, err)
 
 				assertTarFileContents(t,
 					layer3Path,
-					filepath.Join(opts.LayersDir, "other.buildpack.id/new-launch-layer/new-launch-layer-file"),
+					filepath.Join(opts.LayersDir, "other.buildpack.id", "new-launch-layer", "new-launch-layer-file"),
 					"echo text from new layer\n")
-				assertTarFileOwner(t, layer3Path, filepath.Join(opts.LayersDir, "other.buildpack.id/new-launch-layer"), uid, gid)
-				assertAddLayerLog(t, logHandler, "other.buildpack.id:new-launch-layer", layer3Path)
+				assertTarFileOwner(t, layer3Path, filepath.Join(opts.LayersDir, "other.buildpack.id", "new-launch-layer"), uid, gid)
+				assertAddLayerLog(t, logHandler, "other.buildpack.id+new-launch-layer", layer3Path)
 			})
 
 			it("only creates expected layers", func() {
@@ -702,7 +702,7 @@ type = "Apache-2.0"
 					h.AssertError(
 						t,
 						exporter.Export(opts),
-						"cannot reuse 'buildpack.id:launch-layer-no-local-dir', previous image has no metadata for layer 'buildpack.id:launch-layer-no-local-dir'",
+						"cannot reuse 'buildpack.id+launch-layer-no-local-dir', previous image has no metadata for layer 'buildpack.id+launch-layer-no-local-dir'",
 					)
 				})
 			})
@@ -721,7 +721,7 @@ type = "Apache-2.0"
 					h.AssertError(
 						t,
 						exporter.Export(opts),
-						"cannot reuse 'buildpack.id:launch-layer-no-local-dir', previous image has no metadata for layer 'buildpack.id:launch-layer-no-local-dir'",
+						"cannot reuse 'buildpack.id+launch-layer-no-local-dir', previous image has no metadata for layer 'buildpack.id+launch-layer-no-local-dir'",
 					)
 				})
 			})
@@ -833,7 +833,7 @@ type = "Apache-2.0"
 
 				assertTarFileContents(t,
 					configLayerPath,
-					filepath.Join(opts.LayersDir, "config/metadata.toml"),
+					filepath.Join(opts.LayersDir, "config", "metadata.toml"),
 					"[[processes]]\n  type = \"some-process-type\"\n  command = \"/some/command\"\n",
 				)
 				assertTarFileOwner(t, configLayerPath, filepath.Join(opts.LayersDir, "config"), uid, gid)
@@ -856,23 +856,23 @@ type = "Apache-2.0"
 			it("adds launch layers", func() {
 				h.AssertNil(t, exporter.Export(opts))
 
-				layer1Path, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "buildpack.id/layer1"))
+				layer1Path, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "buildpack.id", "layer1"))
 				h.AssertNil(t, err)
 				assertTarFileContents(t,
 					layer1Path,
-					filepath.Join(opts.LayersDir, "buildpack.id/layer1/file-from-layer-1"),
+					filepath.Join(opts.LayersDir, "buildpack.id", "layer1", "file-from-layer-1"),
 					"echo text from layer 1\n")
-				assertTarFileOwner(t, layer1Path, filepath.Join(opts.LayersDir, "buildpack.id/layer1"), uid, gid)
-				assertAddLayerLog(t, logHandler, "buildpack.id:layer1", layer1Path)
+				assertTarFileOwner(t, layer1Path, filepath.Join(opts.LayersDir, "buildpack.id", "layer1"), uid, gid)
+				assertAddLayerLog(t, logHandler, "buildpack.id+layer1", layer1Path)
 
-				layer2Path, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "buildpack.id/layer2"))
+				layer2Path, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "buildpack.id", "layer2"))
 				h.AssertNil(t, err)
 				assertTarFileContents(t,
 					layer2Path,
-					filepath.Join(opts.LayersDir, "buildpack.id/layer2/file-from-layer-2"),
+					filepath.Join(opts.LayersDir, "buildpack.id", "layer2", "file-from-layer-2"),
 					"echo text from layer 2\n")
-				assertTarFileOwner(t, layer2Path, filepath.Join(opts.LayersDir, "buildpack.id/layer2"), uid, gid)
-				assertAddLayerLog(t, logHandler, "buildpack.id:layer2", layer2Path)
+				assertTarFileOwner(t, layer2Path, filepath.Join(opts.LayersDir, "buildpack.id", "layer2"), uid, gid)
+				assertAddLayerLog(t, logHandler, "buildpack.id+layer2", layer2Path)
 			})
 
 			it("only creates expected layers", func() {
@@ -1118,7 +1118,7 @@ type = "Apache-2.0"
 				h.AssertError(
 					t,
 					exporter.Export(opts),
-					"failed to parse metadata for layers '[buildpack.id:bad-layer]'",
+					"failed to parse metadata for layers '[buildpack.id+bad-layer]'",
 				)
 			})
 		})
@@ -1135,7 +1135,7 @@ type = "Apache-2.0"
 				h.AssertError(
 					t,
 					exporter.Export(opts),
-					"layer 'buildpack.id:cache-layer-no-contents' is cache=true but has no contents",
+					"layer 'buildpack.id+cache-layer-no-contents' is cache=true but has no contents",
 				)
 			})
 		})
@@ -1398,7 +1398,7 @@ type = "Apache-2.0"
 
 			it("fails", func() {
 				err := exporter.Cache(layersDir, testCache)
-				h.AssertError(t, err, "failed to cache layer 'buildpack.id:cache-true-no-contents' because it has no contents")
+				h.AssertError(t, err, "failed to cache layer 'buildpack.id+cache-true-no-contents' because it has no contents")
 			})
 		})
 	})
