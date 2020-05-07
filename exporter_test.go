@@ -119,7 +119,7 @@ func testExporter(t *testing.T, when spec.G, it spec.S) {
 				sliceConfigFilePath := filepath.Join(opts.AppDir, "static", "assets", "config.txt")
 				sliceSvgFilePath := filepath.Join(opts.AppDir, "static", "assets", "logo.svg")
 
-				localReusableLayerPath := filepath.Join(opts.LayersDir, "other.buildpack.id/local-reusable-layer")
+				localReusableLayerPath := filepath.Join(opts.LayersDir, "other.buildpack.id", "local-reusable-layer")
 				localReusableLayerSha := h.ComputeSHA256ForPath(t, localReusableLayerPath, uid, gid)
 				launcherSHA := h.ComputeSHA256ForPath(t, opts.LauncherConfig.Path, uid, gid)
 				sliceSHA = h.ComputeSHA256ForFiles(t, filepath.Join(opts.LayersDir, "slice-test.tar"), uid, gid, sliceConfigFilePath, sliceSvgFilePath)
@@ -1163,6 +1163,7 @@ type = "Apache-2.0"
 
 			testCache, err = cache.NewVolumeCache(cacheDir)
 			h.AssertNil(t, err)
+			t.Logf("=======> CACHE DIR: %s", cacheDir)
 
 			exporter = &lifecycle.Exporter{
 				ArtifactsDir: tmpDir,
@@ -1178,7 +1179,7 @@ type = "Apache-2.0"
 		})
 
 		it.After(func() {
-			h.AssertNil(t, os.RemoveAll(cacheDir))
+			// h.AssertNil(t, os.RemoveAll(cacheDir))
 			h.AssertNil(t, os.RemoveAll(tmpDir))
 		})
 
@@ -1365,7 +1366,7 @@ type = "Apache-2.0"
 						h.AssertNil(t, err)
 					})
 
-					it.Focus("doesn't reuse layers", func() {
+					it("doesn't reuse layers", func() {
 						err := exporter.Cache(layersDir, testCache)
 						h.AssertNil(t, err)
 
