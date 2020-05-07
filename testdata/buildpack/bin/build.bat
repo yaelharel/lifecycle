@@ -1,3 +1,2 @@
-cd /D "%~dp0"
-bash ./build %1 %2 %3
-echo *************DONE
+@echo off
+bash %~dp0\build %1 %2 %3

@@ -61,9 +61,6 @@ func testBuilder(t *testing.T, when spec.G, it spec.S) {
 		errLog := log.New(io.MultiWriter(stderr, it.Out()), "", 0)
 
 		buildpacksDir := filepath.Join("testdata", "by-id")
-		// if runtime.GOOS == "windows" {
-		// 	buildpacksDir = filepath.Join(buildpacksDir, "windows")
-		// }
 
 		builder = &lifecycle.Builder{
 			AppDir:        appDir,
@@ -94,7 +91,7 @@ func testBuilder(t *testing.T, when spec.G, it spec.S) {
 				env.EXPECT().WithPlatform(platformDir).Return(append(os.Environ(), "TEST_ENV=Bv2"), nil)
 			})
 
-			it.Focus("should ensure each buildpack's layers dir exists and process build layers", func() {
+			it("should ensure each buildpack's layers dir exists and process build layers", func() {
 				mkdir(t,
 					filepath.Join(layersDir, "A"),
 

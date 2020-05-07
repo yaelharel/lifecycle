@@ -1,2 +1,2 @@
-cd /D "%~dp0"
-bash ./detect %1 %2
+@echo off
+bash %~dp0\detect %1 %2
