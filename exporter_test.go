@@ -195,7 +195,7 @@ func testExporter(t *testing.T, when spec.G, it spec.S) {
 				opts.AppDir, err = filepath.Abs(filepath.Join("testdata", "exporter", "previous-image-exists", "layers", "app"))
 				h.AssertNil(t, err)
 
-				localReusableLayerPath := filepath.Join(opts.LayersDir, "other.buildpack.id/local-reusable-layer")
+				localReusableLayerPath := filepath.Join(opts.LayersDir, "other.buildpack.id", "local-reusable-layer")
 				localReusableLayerSha := h.ComputeSHA256ForPath(t, localReusableLayerPath, uid, gid)
 				launcherSHA := h.ComputeSHA256ForPath(t, opts.LauncherConfig.Path, uid, gid)
 				fakeAppImage.AddPreviousLayer("sha256:"+localReusableLayerSha, "")
@@ -339,11 +339,11 @@ func testExporter(t *testing.T, when spec.G, it spec.S) {
 				h.AssertNil(t, err)
 				configLayerSHA := h.ComputeSHA256ForFile(t, configLayerPath)
 
-				newLayerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "buildpack.id/new-launch-layer"))
+				newLayerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "buildpack.id", "new-launch-layer"))
 				h.AssertNil(t, err)
 				newLayerSHA := h.ComputeSHA256ForFile(t, newLayerPath)
 
-				secondBPLayerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "other.buildpack.id/new-launch-layer"))
+				secondBPLayerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "other.buildpack.id", "new-launch-layer"))
 				h.AssertNil(t, err)
 				secondBPLayerPathSHA := h.ComputeSHA256ForFile(t, secondBPLayerPath)
 
@@ -897,11 +897,11 @@ type = "Apache-2.0"
 				h.AssertNil(t, err)
 				launcherLayerSHA := h.ComputeSHA256ForFile(t, launcherLayerPath)
 
-				layer1Path, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "buildpack.id/layer1"))
+				layer1Path, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "buildpack.id", "layer1"))
 				h.AssertNil(t, err)
 				buildpackLayer1SHA := h.ComputeSHA256ForFile(t, layer1Path)
 
-				layer2Path, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "buildpack.id/layer2"))
+				layer2Path, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "buildpack.id", "layer2"))
 				h.AssertNil(t, err)
 				buildpackLayer2SHA := h.ComputeSHA256ForFile(t, layer2Path)
 
@@ -1066,15 +1066,15 @@ type = "Apache-2.0"
 			it("exports layers from the escaped id path", func() {
 				h.AssertNil(t, exporter.Export(opts))
 
-				layerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "some_escaped_bp_id/some-layer"))
+				layerPath, err := findLayerWithPath(fakeAppImage, filepath.Join(opts.LayersDir, "some_escaped_bp_id", "some-layer"))
 				h.AssertNil(t, err)
 
 				assertTarFileContents(t,
 					layerPath,
-					filepath.Join(opts.LayersDir, "some_escaped_bp_id/some-layer/some-file"),
+					filepath.Join(opts.LayersDir, "some_escaped_bp_id", "some-layer", "some-file"),
 					"some-file-contents\n")
-				assertTarFileOwner(t, layerPath, filepath.Join(opts.LayersDir, "some_escaped_bp_id/some-layer/some-file"), uid, gid)
-				assertAddLayerLog(t, logHandler, "some/escaped/bp/id:some-layer", layerPath)
+				assertTarFileOwner(t, layerPath, filepath.Join(opts.LayersDir, "some_escaped_bp_id", "some-layer", "some-file"), uid, gid)
+				assertAddLayerLog(t, logHandler, "some/escaped/bp/id+some-layer", layerPath)
 			})
 
 			it("exports buildpack metadata with unescaped id", func() {
@@ -1186,8 +1186,8 @@ type = "Apache-2.0"
 		when("the layers are valid", func() {
 			it.Before(func() {
 				layersDir = filepath.Join("testdata", "cacher", "layers")
-				cacheTrueLayerSHA = "sha256:" + h.ComputeSHA256ForPath(t, filepath.Join(layersDir, "buildpack.id/cache-true-layer"), 1234, 4321)
-				otherBuildpackLayerSHA = "sha256:" + h.ComputeSHA256ForPath(t, filepath.Join(layersDir, "other.buildpack.id/other-buildpack-layer"), 1234, 4321)
+				cacheTrueLayerSHA = h.ComputeSHA256ForPath(t, filepath.Join(layersDir, "buildpack.id", "cache-true-layer"), 1234, 4321)
+				otherBuildpackLayerSHA = h.ComputeSHA256ForPath(t, filepath.Join(layersDir, "other.buildpack.id", "other-buildpack-layer"), 1234, 4321)
 			})
 
 			when("there is no previous cache", func() {
@@ -1198,14 +1198,14 @@ type = "Apache-2.0"
 					assertTarFileContents(
 						t,
 						filepath.Join(cacheDir, "committed", cacheTrueLayerSHA+".tar"),
-						filepath.Join(layersDir, "buildpack.id/cache-true-layer/file-from-cache-true-layer"),
+						filepath.Join(layersDir, "buildpack.id", "cache-true-layer", "file-from-cache-true-layer"),
 						"file-from-cache-true-contents",
 					)
 
 					assertTarFileContents(
 						t,
 						filepath.Join(cacheDir, "committed", otherBuildpackLayerSHA+".tar"),
-						filepath.Join(layersDir, "other.buildpack.id/other-buildpack-layer/other-buildpack-layer-file"),
+						filepath.Join(layersDir, "other.buildpack.id", "other-buildpack-layer", "other-buildpack-layer-file"),
 						"other-buildpack-layer-contents",
 					)
 				})
@@ -1217,7 +1217,7 @@ type = "Apache-2.0"
 					assertTarFileOwner(
 						t,
 						filepath.Join(cacheDir, "committed", cacheTrueLayerSHA+".tar"),
-						filepath.Join(layersDir, "buildpack.id/cache-true-layer/file-from-cache-true-layer"),
+						filepath.Join(layersDir, "buildpack.id", "cache-true-layer", "file-from-cache-true-layer"),
 						1234,
 						4321,
 					)
@@ -1225,7 +1225,7 @@ type = "Apache-2.0"
 					assertTarFileOwner(
 						t,
 						filepath.Join(cacheDir, "committed", otherBuildpackLayerSHA+".tar"),
-						filepath.Join(layersDir, "other.buildpack.id/other-buildpack-layer/other-buildpack-layer-file"),
+						filepath.Join(layersDir, "other.buildpack.id", "other-buildpack-layer", "other-buildpack-layer-file"),
 						1234,
 						4321,
 					)
@@ -1240,7 +1240,7 @@ type = "Apache-2.0"
 
 					t.Log("adds layer shas to metadata")
 					h.AssertEq(t, metadata.Buildpacks[0].ID, "buildpack.id")
-					h.AssertEq(t, metadata.Buildpacks[0].Layers["cache-true-layer"].SHA, cacheTrueLayerSHA)
+					h.AssertEq(t, metadata.Buildpacks[0].Layers["cache-true-layer"].SHA, "sha256:"+cacheTrueLayerSHA)
 					h.AssertEq(t, metadata.Buildpacks[0].Layers["cache-true-layer"].Launch, true)
 					h.AssertEq(t, metadata.Buildpacks[0].Layers["cache-true-layer"].Build, false)
 					h.AssertEq(t, metadata.Buildpacks[0].Layers["cache-true-layer"].Cache, true)
@@ -1266,7 +1266,7 @@ type = "Apache-2.0"
 				)
 
 				it.Before(func() {
-					computedReusableLayerSHA = "sha256:" + h.ComputeSHA256ForPath(t, filepath.Join(layersDir, "buildpack.id/cache-true-no-sha-layer"), 1234, 4321)
+					computedReusableLayerSHA = h.ComputeSHA256ForPath(t, filepath.Join(layersDir, "buildpack.id", "cache-true-no-sha-layer"), 1234, 4321)
 					metadataTemplate = `{
 					"buildpacks": [
 					 {
@@ -1321,7 +1321,7 @@ type = "Apache-2.0"
 
 						t.Log("adds layer shas to metadata")
 						h.AssertEq(t, metadata.Buildpacks[0].ID, "buildpack.id")
-						h.AssertEq(t, metadata.Buildpacks[0].Layers["cache-true-layer"].SHA, cacheTrueLayerSHA)
+						h.AssertEq(t, metadata.Buildpacks[0].Layers["cache-true-layer"].SHA, "sha256:"+cacheTrueLayerSHA)
 						h.AssertEq(t, metadata.Buildpacks[0].Layers["cache-true-layer"].Launch, true)
 						h.AssertEq(t, metadata.Buildpacks[0].Layers["cache-true-layer"].Build, false)
 						h.AssertEq(t, metadata.Buildpacks[0].Layers["cache-true-layer"].Cache, true)
@@ -1330,7 +1330,7 @@ type = "Apache-2.0"
 						})
 
 						h.AssertEq(t, metadata.Buildpacks[0].ID, "buildpack.id")
-						h.AssertEq(t, metadata.Buildpacks[0].Layers["cache-true-no-sha-layer"].SHA, computedReusableLayerSHA)
+						h.AssertEq(t, metadata.Buildpacks[0].Layers["cache-true-no-sha-layer"].SHA, "sha256:"+computedReusableLayerSHA)
 						h.AssertEq(t, metadata.Buildpacks[0].Layers["cache-true-no-sha-layer"].Launch, false)
 						h.AssertEq(t, metadata.Buildpacks[0].Layers["cache-true-no-sha-layer"].Build, false)
 						h.AssertEq(t, metadata.Buildpacks[0].Layers["cache-true-no-sha-layer"].Cache, true)
@@ -1339,7 +1339,7 @@ type = "Apache-2.0"
 						})
 
 						h.AssertEq(t, metadata.Buildpacks[1].ID, "other.buildpack.id")
-						h.AssertEq(t, metadata.Buildpacks[1].Layers["other-buildpack-layer"].SHA, otherBuildpackLayerSHA)
+						h.AssertEq(t, metadata.Buildpacks[1].Layers["other-buildpack-layer"].SHA, "sha256:"+otherBuildpackLayerSHA)
 						h.AssertEq(t, metadata.Buildpacks[1].Layers["other-buildpack-layer"].Launch, true)
 						h.AssertEq(t, metadata.Buildpacks[1].Layers["other-buildpack-layer"].Build, false)
 						h.AssertEq(t, metadata.Buildpacks[1].Layers["other-buildpack-layer"].Cache, true)

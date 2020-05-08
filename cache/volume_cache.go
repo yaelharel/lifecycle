@@ -108,7 +108,7 @@ func (c *VolumeCache) AddLayer(rc io.ReadCloser, diffID string) error {
 		return errCacheCommitted
 	}
 
-	fh, err := os.Create(filepath.Join(c.stagingDir, diffID+".tar"))
+	fh, err := os.Create(diffIDPath(c.stagingDir, diffID))
 	if err != nil {
 		return errors.Wrapf(err, "create layer file in cache")
 	}
@@ -124,7 +124,7 @@ func (c *VolumeCache) ReuseLayer(diffID string) error {
 	if c.committed {
 		return errCacheCommitted
 	}
-	if err := os.Link(filepath.Join(c.committedDir, diffID+".tar"), filepath.Join(c.stagingDir, diffID+".tar")); err != nil && !os.IsExist(err) {
+	if err := os.Link(diffIDPath(c.committedDir, diffID), diffIDPath(c.stagingDir, diffID)); err != nil && !os.IsExist(err) {
 		return errors.Wrapf(err, "reusing layer (%s)", diffID)
 	}
 	return nil
@@ -143,7 +143,7 @@ func (c *VolumeCache) RetrieveLayer(diffID string) (io.ReadCloser, error) {
 }
 
 func (c *VolumeCache) HasLayer(diffID string) (bool, error) {
-	if _, err := os.Stat(filepath.Join(c.committedDir, diffID+".tar")); err != nil {
+	if _, err := os.Stat(diffIDPath(c.committedDir, diffID)); err != nil {
 		if os.IsNotExist(err) {
 			return false, nil
 		}
@@ -153,7 +153,7 @@ func (c *VolumeCache) HasLayer(diffID string) (bool, error) {
 }
 
 func (c *VolumeCache) RetrieveLayerFile(diffID string) (string, error) {
-	path := filepath.Join(c.committedDir, diffID+".tar")
+	path := diffIDPath(c.committedDir, diffID)
 	if _, err := os.Stat(path); err != nil {
 		if os.IsNotExist(err) {
 			return "", errors.Wrapf(err, "layer with SHA '%s' not found", diffID)
