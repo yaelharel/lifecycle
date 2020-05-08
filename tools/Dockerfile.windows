@@ -1,8 +1,9 @@
 # Purpose: allow testing using only a DOCKER_HOST connectable windows daemon. Uses COPY instead as alternative to complex volume mapping
 # Usage:
-#   docker build --tag lifecycle-test -f tools/Dockerfile.windows . && \
-#   docker run --rm -v gopath:c:/gopath lifecycle-test make test
-FROM golang:1.14-windowsservercore-1809
+#   docker build --tag lifecycle-test --build-arg os_tag=<host os version> -f tools/Dockerfile.windows --isolation=process ./ && \
+#   docker run --rm -v gopath:c:/gopath --isolation=process lifecycle-test make test
+ARG os_tag
+FROM golang:1.14-windowsservercore-${os_tag}
 
 RUN powershell.exe -Command \
     Install-PackageProvider -Name NuGet -Force ; \
