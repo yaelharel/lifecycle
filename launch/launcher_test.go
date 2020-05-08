@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"syscall"
+	"runtime"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -14,6 +14,7 @@ import (
 
 	"github.com/buildpacks/lifecycle/launch"
 	"github.com/buildpacks/lifecycle/launch/testmock"
+	"github.com/buildpacks/lifecycle/launch/testsyscall"
 )
 
 //go:generate mockgen -package testmock -destination testmock/launch_env.go github.com/buildpacks/lifecycle/launch Env
@@ -40,6 +41,10 @@ func testLauncher(t *testing.T, when spec.G, it spec.S) {
 	)
 
 	it.Before(func() {
+		if runtime.GOOS == "windows" {
+			t.Skip("Skipping cleanup for Windows")
+		}
+
 		mockCtrl = gomock.NewController(t)
 		env = testmock.NewMockEnv(mockCtrl)
 		env.EXPECT().List().Return(envList).AnyTimes()
@@ -79,6 +84,10 @@ func testLauncher(t *testing.T, when spec.G, it spec.S) {
 	})
 
 	it.After(func() {
+		if runtime.GOOS == "windows" {
+			t.Skip("Skipping cleanup for Windows")
+		}
+
 		os.Chdir(wd) // restore the working dir after Launcher changes it
 		os.RemoveAll(tmpDir)
 		mockCtrl.Finish()
@@ -256,7 +265,7 @@ func testLauncher(t *testing.T, when spec.G, it spec.S) {
 					{Type: "start", Command: "./start"},
 				}
 				launcher.Buildpacks = []launch.Buildpack{{ID: "bp.1"}, {ID: "bp.2"}}
-				launcher.Exec = syscallExecWithStdout(t, tmpDir)
+				launcher.Exec = testsyscall.SyscallExecWithStdout(t, tmpDir)
 
 				mkdir(t,
 					filepath.Join(tmpDir, "launch", "bp.1", "layer1"),
@@ -321,7 +330,7 @@ func testLauncher(t *testing.T, when spec.G, it spec.S) {
 					{Type: "start", Command: "./start"},
 				}
 				launcher.Buildpacks = []launch.Buildpack{{ID: "bp.1"}, {ID: "bp.2"}}
-				launcher.Exec = syscallExecWithStdout(t, tmpDir)
+				launcher.Exec = testsyscall.SyscallExecWithStdout(t, tmpDir)
 
 				mkdir(t,
 					filepath.Join(tmpDir, "launch", "bp.1", "layer", "profile.d"),
@@ -394,38 +403,6 @@ func testLauncher(t *testing.T, when spec.G, it spec.S) {
 			})
 		})
 	})
-}
-
-func syscallExecWithStdout(t *testing.T, tmpDir string) func(argv0 string, argv []string, envv []string) error {
-	t.Helper()
-	fstdin, err := os.Create(filepath.Join(tmpDir, "stdin"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	fstdout, err := os.Create(filepath.Join(tmpDir, "stdout"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	fstderr, err := os.Create(filepath.Join(tmpDir, "stderr"))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return func(argv0 string, argv []string, envv []string) error {
-		pid, err := syscall.ForkExec(argv0, argv, &syscall.ProcAttr{
-			Dir:   filepath.Join(tmpDir, "launch", "app"),
-			Env:   envv,
-			Files: []uintptr{fstdin.Fd(), fstdout.Fd(), fstderr.Fd()},
-			Sys: &syscall.SysProcAttr{
-				Foreground: false,
-			},
-		})
-		if err != nil {
-			return err
-		}
-		_, err = syscall.Wait4(pid, nil, 0, nil)
-		return err
-	}
 }
 
 func mkfile(t *testing.T, data string, paths ...string) {
