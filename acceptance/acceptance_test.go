@@ -158,7 +158,7 @@ func lifecycleCmd(binary string, args ...string) *exec.Cmd {
 }
 
 func buildBinaries(t *testing.T, dir string, goos string) {
-	cmd := exec.Command("make", "build-"+runtime.GOOS)
+	cmd := exec.Command("make", "build-"+goos) // TODO: confirm this is what we want
 	wd, err := os.Getwd()
 	h.AssertNil(t, err)
 	cmd.Dir = filepath.Join(wd, "..")

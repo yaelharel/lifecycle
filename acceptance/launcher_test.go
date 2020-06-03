@@ -21,8 +21,8 @@ var (
 
 func TestLauncher(t *testing.T) {
 	buildLauncher(t)
-	buildLaunchImage(t)
-	defer removeLaunchImage(t)
+	buildTestImage(t, launchImage, launchDockerContext)
+	defer removeTestImage(t, launchImage)
 	spec.Run(t, "acceptance", testLauncher, spec.Parallel(), spec.Report(report.Terminal{}))
 }
 
@@ -202,15 +202,16 @@ func testLauncher(t *testing.T, when spec.G, it spec.S) {
 	})
 }
 
-func buildLaunchImage(t *testing.T) {
-	cmd := exec.Command("docker", "build", "-t", launchImage, launchDockerContext)
+// TODO: move buildTestImage and removeTestImage into more central location
+func buildTestImage(t *testing.T, name, context string) {
+	cmd := exec.Command("docker", "build", "-t", name, context)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("failed to run %v\n OUTPUT: %s\n ERROR: %s\n", cmd.Args, string(output), err)
 	}
 }
 
-func removeLaunchImage(t *testing.T) {
-	cmd := exec.Command("docker", "rmi", launchImage)
+func removeTestImage(t *testing.T, name string) {
+	cmd := exec.Command("docker", "rmi", name)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("failed to run %v\n OUTPUT: %s\n ERROR: %s\n", cmd.Args, string(output), err)
 	}

@@ -31,7 +31,7 @@ all: test build package
 build: build-linux build-windows
 
 build-linux-lifecycle: export GOOS:=linux
-build-linux-lifecycle: OUT_DIR:=$(BUILD_DIR)/$(GOOS)/lifecycle
+build-linux-lifecycle: OUT_DIR?=$(BUILD_DIR)/$(GOOS)/lifecycle # TODO: confirm this is what we want
 build-linux-lifecycle: GOENV:=GOARCH=$(GOARCH) CGO_ENABLED=1
 build-linux-lifecycle: DOCKER_RUN=docker run --workdir=/lifecycle -v $(OUT_DIR):/out -v $(PWD):/lifecycle $(COMPILATION_IMAGE)
 build-linux-lifecycle:
@@ -49,7 +49,7 @@ build-linux-launcher:
 	test $$(du -m $(OUT_DIR)/launcher|cut -f 1) -le 3
 
 build-linux-symlinks: export GOOS:=linux
-build-linux-symlinks: OUT_DIR:=$(BUILD_DIR)/$(GOOS)/lifecycle
+build-linux-symlinks: OUT_DIR?=$(BUILD_DIR)/$(GOOS)/lifecycle
 build-linux-symlinks:
 	@echo "> Creating phase symlinks for linux..."
 	ln -sf lifecycle $(OUT_DIR)/detector
@@ -63,7 +63,7 @@ build-linux-symlinks:
 build-linux: build-linux-lifecycle build-linux-symlinks build-linux-launcher
 
 build-windows: export GOOS:=windows
-build-windows: OUT_DIR:=$(BUILD_DIR)/$(GOOS)/lifecycle
+build-windows: OUT_DIR?=$(BUILD_DIR)/$(GOOS)/lifecycle
 build-windows:
 	@echo "> Building for windows..."
 	mkdir -p $(OUT_DIR)
@@ -78,7 +78,7 @@ build-windows:
 	ln -sf lifecycle.exe $(OUT_DIR)/creator.exe
 
 build-darwin: export GOOS:=darwin
-build-darwin: OUT_DIR:=$(BUILD_DIR)/$(GOOS)/lifecycle
+build-darwin: OUT_DIR?=$(BUILD_DIR)/$(GOOS)/lifecycle
 build-darwin:
 	@echo "> Building for macos..."
 	mkdir -p $(OUT_DIR)
@@ -135,7 +135,8 @@ unit: verify-jq format lint install-yj
 acceptance: format lint
 	@echo "> Running acceptance tests..."
 	$(GOTEST) -v -count=1 -tags=acceptance ./acceptance/...
-	
+
+# TODO: this doesn't seem to do anything different from make acceptance
 acceptance-darwin: format lint
 	@echo "> Running acceptance tests..."
 	$(GOTEST) -v -count=1 -tags=acceptance ./acceptance/...

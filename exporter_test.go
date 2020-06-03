@@ -1427,7 +1427,7 @@ func assertReuseLayerLog(t *testing.T, logHandler *memory.Handler, name, sha str
 
 func assertTarFileContents(t *testing.T, tarfile, path, expected string) {
 	t.Helper()
-	exist, contents := tarFileContext(t, tarfile, path)
+	exist, contents := tarFileContents(t, tarfile, path)
 	if !exist {
 		t.Fatalf("%s does not exist in %s", path, tarfile)
 	}
@@ -1436,14 +1436,14 @@ func assertTarFileContents(t *testing.T, tarfile, path, expected string) {
 
 func assertTarFileExists(t *testing.T, tarfile, path string, expected bool) {
 	t.Helper()
-	exist, _ := tarFileContext(t, tarfile, path)
+	exist, _ := tarFileContents(t, tarfile, path)
 	if !exist {
 		h.AssertEq(t, false, expected)
 	}
 	h.AssertEq(t, exist, expected)
 }
 
-func tarFileContext(t *testing.T, tarfile, path string) (exist bool, contents string) {
+func tarFileContents(t *testing.T, tarfile, path string) (exist bool, contents string) {
 	t.Helper()
 	r, err := os.Open(tarfile)
 	h.AssertNil(t, err)
