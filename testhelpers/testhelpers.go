@@ -100,6 +100,13 @@ func AssertNil(t *testing.T, actual interface{}) {
 	}
 }
 
+func AssertNotNil(t *testing.T, actual interface{}) {
+	t.Helper()
+	if isNil(actual) {
+		t.Fatal("Expected not nil")
+	}
+}
+
 func AssertJSONEq(t *testing.T, expected, actual string) {
 	t.Helper()
 
