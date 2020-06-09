@@ -1,5 +1,7 @@
 FROM ubuntu:bionic
 
+RUN apt-get update && apt-get install -y ca-certificates
+
 COPY ./container/ /
 
-ENTRYPOINT ["/cnb/lifecycle/analyzer"]
+WORKDIR /layers
