@@ -78,6 +78,7 @@ func (a *analyzeCmd) Privileges() error {
 	if err := priv.RunAs(a.uid, a.gid); err != nil {
 		return cmd.FailErr(err, fmt.Sprintf("exec as user %d:%d", a.uid, a.gid))
 	}
+	cmd.Logger.Debugf("exec as user %d:%d", a.uid, a.gid) // TODO: figure out the right place for this.
 	return nil
 }
 
