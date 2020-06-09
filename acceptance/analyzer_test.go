@@ -33,6 +33,7 @@ func TestAnalyzer(t *testing.T) {
 	spec.Run(t, "acceptance", testAnalyzer, spec.Parallel(), spec.Report(report.Terminal{}))
 }
 
+// TODO: see which of these contexts can be collapsed together, so that the tests run faster.
 func testAnalyzer(t *testing.T, when spec.G, it spec.S) {
 	when("called without an image", func() {
 		it("errors", func() {
@@ -76,7 +77,7 @@ func testAnalyzer(t *testing.T, when spec.G, it spec.S) {
 				"/bin/bash",
 				"-c",
 				// TODO: if CNB_USER_ID and CNB_GROUP_ID are provided, CNB_REGISTRY_AUTH must also be provided or we will fail to stat /root/.docker/config.json. This seems brittle...
-				fmt.Sprintf("CNB_USER_ID=%s CNB_GROUP_ID=%s CNB_REGISTRY_AUTH={} %s some-image; ls -al /layers", "2222", "3333", analyzerPath),
+				fmt.Sprintf("CNB_USER_ID=2222 CNB_GROUP_ID=3333 CNB_REGISTRY_AUTH={} %s some-image; ls -al /layers", analyzerPath),
 			)
 			output, err := cmd.CombinedOutput()
 			h.AssertNil(t, err)
@@ -94,7 +95,21 @@ func testAnalyzer(t *testing.T, when spec.G, it spec.S) {
 		})
 	})
 	it("runs as the provided user", func() {
-		// TODO: not sure how to demonstrate this... it seems important though.
+		cmd := exec.Command( // TODO: maybe this could also use a test helper
+			"docker",
+			"run",
+			"--rm",
+			analyzeImage,
+			"/bin/bash",
+			"-c",
+			fmt.Sprintf("CNB_USER_ID=2222 CNB_GROUP_ID=3333 CNB_REGISTRY_AUTH={} %s -log-level debug some-image", analyzerPath),
+		)
+		output, err := cmd.CombinedOutput()
+		h.AssertNil(t, err)
+		expected := fmt.Sprintf("exec as user 2222:3333")
+		if !strings.Contains(string(output), expected) {
+			t.Fatalf("failed to receive expected output:\n\t got: %s\n\t want: %s", output, expected)
+		}
 	})
 	when("group path is provided", func() {
 		it("uses the provided group path", func() {
@@ -144,7 +159,7 @@ func testAnalyzer(t *testing.T, when spec.G, it spec.S) {
 	})
 }
 
-// TODO: move buildLifecycle into more central location, or adapt buildBinaries. Also, we should only have to build the binaries once when running acceptance.
+// TODO: move buildLifecycle into more central location, or adapt buildBinaries. Also, we should only have to build the binaries once when running all of acceptance.
 func buildLifecycle(t *testing.T, dir string) {
 	cmd := exec.Command("make", "build-linux")
 	wd, err := os.Getwd()
