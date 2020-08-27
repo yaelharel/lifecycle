@@ -6,3 +6,4 @@
 /out
 
 acceptance/testdata/*/**/container/cnb/lifecycle/*
+acceptance/testdata/analyzer/analyze-image/container/registry-docker-config/*

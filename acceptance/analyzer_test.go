@@ -54,6 +54,10 @@ func TestAnalyzer(t *testing.T) {
 	defer registry.Stop(t)
 
 	os.Setenv("DOCKER_CONFIG", registry.DockerDirectory)
+	// Copy registry docker directory to analyze-image container
+	targetDockerConfig := filepath.Join("testdata", "analyzer", "analyze-image", "container", "registry-docker-config")
+	h.AssertNil(t, os.RemoveAll(filepath.Join(targetDockerConfig, "config.json")))
+	h.RecursiveCopy(t, registry.DockerDirectory, targetDockerConfig)
 
 	// Setup test container
 
@@ -534,34 +538,26 @@ func testAnalyzer(t *testing.T, when spec.G, it spec.S) {
 		when("CNB_REGISTRY_AUTH is not provided", func() {
 			when("DOCKER_CONFIG is set", func() {
 				it("succeeds", func() {
-					h.SkipIf(t, runtime.GOOS == "windows", "Can't run bash on Windows")
-
-					// Copy docker config directory to a temp directory to avoid tampering with permissions for other tests.
-					dockerConfig, err := ioutil.TempDir("", "test-docker-config-")
-					defer os.RemoveAll(dockerConfig)
-					h.AssertNil(t, err)
-					h.RecursiveCopy(t, registry.DockerDirectory, dockerConfig)
-					// Some OSes (like macOS) use symlinks for the standard temp dir.
-					// Resolve it so it can be properly mounted by the Docker daemon.
-					dockerConfig, err = filepath.EvalSymlinks(dockerConfig)
-					h.AssertNil(t, err)
-
 					h.DockerRunAndCopy(t,
 						containerName,
 						copyDir,
 						analyzeImage,
 						"/layers",
 						h.WithFlags(
-							"--mount", fmt.Sprintf("type=bind,source=%s,target=/mounted-docker-config", dockerConfig),
-							"--env", "DOCKER_CONFIG=/mounted-docker-config",
+							"--env", "DOCKER_CONFIG=/registry-docker-config",
 							"--network", "host",
-						),
+						), // TODO: use a cache image
 						h.WithBash(
-							fmt.Sprintf("chown -R 2222:3333 /mounted-docker-config; %s %s; ls -alR /layers", analyzerPath, appImage), // provide a real app image, so that we can test that the registry is accessible
+							// ensure docker config directory is root owned and NOT world readable
+							fmt.Sprintf(
+								"chown -R root /registry-docker-config; chmod -R 700 /registry-docker-config; %s %s",
+								analyzerPath,
+								appImage,
+							),
 						),
 					)
 
-					h.AssertPathExists(t, filepath.Join(copyDir, "layers", "some-buildpack-id"))
+					h.AssertPathExists(t, filepath.Join(copyDir, "layers", "some-buildpack-id")) // the presence of some-buildpack-id indicates that we were able to retrieve the app image from the registry
 				})
 			})
 		})
