@@ -13,12 +13,29 @@ import (
 )
 
 // NewKeychain returns either a EnvKeychain or a authn.DefaultKeychain depending on whether the provided environment variable is set
+// TODO: can we get rid of this function?
 func NewKeychain(envVar string) authn.Keychain {
 	_, ok := os.LookupEnv(envVar)
 	if !ok {
 		return authn.DefaultKeychain
 	}
 	return &EnvKeychain{EnvVar: envVar}
+}
+
+// TODO: do we want to change the return value to EnvKeychain?
+func NewEnvKeychain(envVar string, images ...string) (authn.Keychain, error) {
+	_, ok := os.LookupEnv(envVar)
+	if !ok {
+		authConfig, err := BuildEnvVar(authn.DefaultKeychain, images...)
+		if err != nil {
+			return nil, err // TODO: do we want to fail or return Anonymous? If we decide to not return an error, we can change the NewKeychain function
+		}
+		if err = os.Setenv(envVar, authConfig); err != nil {
+			return nil, err
+		}
+		return &EnvKeychain{EnvVar: envVar}, nil
+	}
+	return &EnvKeychain{EnvVar: envVar}, nil
 }
 
 // EnvKeychain uses the contents of an environment variable to resolve auth for a registry
