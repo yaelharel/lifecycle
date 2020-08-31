@@ -12,6 +12,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+// NewKeychain returns an EnvKeychain based on the provided environment variable.
+// If the provided environment variable is not set, NewKeychain will build an auth config
+// from authn.DefaultKeychain and set the variable in the environment.
+// If any errors are encountered, NewKeychain will return an anonymous keychain.
 func NewKeychain(envVar string, images ...string) authn.Keychain {
 	_, ok := os.LookupEnv(envVar)
 	if !ok {
