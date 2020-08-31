@@ -65,6 +65,7 @@ func (a *analyzeCmd) Args(nargs int, args []string) error {
 }
 
 func (a *analyzeCmd) Privileges() error {
+	a.setEnvRegistryAuth()
 	if a.useDaemon {
 		var err error
 		a.docker, err = priv.DockerClient()
@@ -105,6 +106,17 @@ func (a *analyzeCmd) Exec() error {
 	}
 
 	return nil
+}
+
+func (a *analyzeCmd) setEnvRegistryAuth() {
+	var registryImages []string
+	if a.cacheImageTag != "" {
+		registryImages = append(registryImages, a.cacheImageTag)
+	}
+	if !a.useDaemon {
+		registryImages = append(registryImages, a.analyzeArgs.imageName)
+	}
+	auth.NewKeychain(cmd.EnvRegistryAuth, registryImages...)
 }
 
 func (aa analyzeArgs) analyze(group lifecycle.BuildpackGroup, cacheStore lifecycle.Cache) (lifecycle.AnalyzedMetadata, error) {

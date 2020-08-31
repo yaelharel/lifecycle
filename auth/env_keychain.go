@@ -26,7 +26,7 @@ func NewKeychain(envVar string, images ...string) authn.Keychain {
 	return &EnvKeychain{EnvVar: envVar}
 }
 
-type AnonymousKeychain struct {}
+type AnonymousKeychain struct{}
 
 func (k *AnonymousKeychain) Resolve(resource authn.Resource) (authn.Authenticator, error) {
 	return authn.Anonymous, nil

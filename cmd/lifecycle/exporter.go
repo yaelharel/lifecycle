@@ -107,6 +107,7 @@ func (e *exportCmd) Args(nargs int, args []string) error {
 }
 
 func (e *exportCmd) Privileges() error {
+	e.setEnvRegistryAuth()
 	if e.useDaemon {
 		var err error
 		e.docker, err = priv.DockerClient()
@@ -143,6 +144,18 @@ func (e *exportCmd) Exec() error {
 	}
 
 	return e.export(group, cacheStore, analyzedMD)
+}
+
+func (e *exportCmd) setEnvRegistryAuth() {
+	var registryImages []string
+	if e.cacheImageTag != "" {
+		registryImages = append(registryImages, e.cacheImageTag)
+	}
+	if !e.useDaemon {
+		registryImages = append(registryImages, e.imageNames...)
+		registryImages = append(registryImages, e.runImageRef)
+	}
+	auth.NewKeychain(cmd.EnvRegistryAuth, registryImages...)
 }
 
 func (ea exportArgs) export(group lifecycle.BuildpackGroup, cacheStore lifecycle.Cache, analyzedMD lifecycle.AnalyzedMetadata) error {

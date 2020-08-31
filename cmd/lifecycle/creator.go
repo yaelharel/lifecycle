@@ -5,6 +5,7 @@ import (
 
 	"github.com/docker/docker/client"
 
+	"github.com/buildpacks/lifecycle/auth"
 	"github.com/buildpacks/lifecycle/cmd"
 	"github.com/buildpacks/lifecycle/image"
 	"github.com/buildpacks/lifecycle/priv"
@@ -88,6 +89,7 @@ func (c *createCmd) Args(nargs int, args []string) error {
 }
 
 func (c *createCmd) Privileges() error {
+	c.setEnvRegistryAuth()
 	if c.useDaemon {
 		var err error
 		c.docker, err = priv.DockerClient()
@@ -173,4 +175,16 @@ func (c *createCmd) Exec() error {
 		uid:                 c.uid,
 		useDaemon:           c.useDaemon,
 	}.export(group, cacheStore, analyzedMD)
+}
+
+func (c *createCmd) setEnvRegistryAuth() {
+	var registryImages []string
+	if c.cacheImageTag != "" {
+		registryImages = append(registryImages, c.cacheImageTag)
+	}
+	if !c.useDaemon {
+		registryImages = append(registryImages, append([]string{c.imageName}, c.additionalTags...)...)
+		registryImages = append(registryImages, c.runImageRef)
+	}
+	auth.NewKeychain(cmd.EnvRegistryAuth, registryImages...)
 }

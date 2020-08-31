@@ -59,6 +59,7 @@ func (r *rebaseCmd) Args(nargs int, args []string) error {
 }
 
 func (r *rebaseCmd) Privileges() error {
+	r.setEnvRegistryAuth()
 	if r.useDaemon {
 		var err error
 		r.docker, err = priv.DockerClient()
@@ -141,4 +142,8 @@ func (r *rebaseCmd) Exec() error {
 		return cmd.FailErrCode(err, cmd.CodeRebaseError, "write rebase report")
 	}
 	return nil
+}
+
+func (r *rebaseCmd) setEnvRegistryAuth() {
+	auth.NewKeychain(cmd.EnvRegistryAuth, r.imageNames...)
 }

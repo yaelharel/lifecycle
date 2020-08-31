@@ -196,7 +196,7 @@ func testAnalyzer(t *testing.T, when spec.G, it spec.S) {
 			assertAnalyzedMetadata(t, filepath.Join(copyDir, "analyzed.toml"))
 		})
 
-		when("app image is found", func() {
+		when("app image exists", func() {
 			var appImage string
 
 			it.Before(func() {
@@ -472,7 +472,7 @@ func testAnalyzer(t *testing.T, when spec.G, it spec.S) {
 			assertAnalyzedMetadata(t, filepath.Join(copyDir, "analyzed.toml"))
 		})
 
-		when("app image is found", func() {
+		when("app image exists", func() {
 			it("restores layer metadata", func() {
 				h.DockerRunAndCopy(t,
 					containerName,
@@ -533,31 +533,31 @@ func testAnalyzer(t *testing.T, when spec.G, it spec.S) {
 					}
 				})
 			})
-		})
 
-		when("CNB_REGISTRY_AUTH is not provided", func() {
-			when("DOCKER_CONFIG is set", func() {
-				it("succeeds", func() {
-					h.DockerRunAndCopy(t,
-						containerName,
-						copyDir,
-						analyzeImage,
-						"/layers",
-						h.WithFlags(
-							"--env", "DOCKER_CONFIG=/registry-docker-config",
-							"--network", "host",
-						), // TODO: use a cache image
-						h.WithBash(
-							// ensure docker config directory is root owned and NOT world readable
-							fmt.Sprintf(
-								"chown -R root /registry-docker-config; chmod -R 700 /registry-docker-config; %s %s",
-								analyzerPath,
-								appImage,
+			when("CNB_REGISTRY_AUTH is not provided", func() {
+				when("DOCKER_CONFIG is set", func() {
+					it("succeeds", func() {
+						h.DockerRunAndCopy(t,
+							containerName,
+							copyDir,
+							analyzeImage,
+							"/layers",
+							h.WithFlags(
+								"--env", "DOCKER_CONFIG=/registry-docker-config",
+								"--network", "host",
 							),
-						),
-					)
+							h.WithBash(
+								// ensure docker config directory is root owned and NOT world readable
+								fmt.Sprintf(
+									"chown -R root /registry-docker-config; chmod -R 700 /registry-docker-config; %s %s",
+									analyzerPath,
+									appImage,
+								),
+							),
+						)
 
-					h.AssertPathExists(t, filepath.Join(copyDir, "layers", "some-buildpack-id")) // the presence of some-buildpack-id indicates that we were able to retrieve the app image from the registry
+						h.AssertPathExists(t, filepath.Join(copyDir, "layers", "some-buildpack-id")) // the presence of some-buildpack-id indicates that we were able to retrieve the app image from the registry
+					})
 				})
 			})
 		})
@@ -600,6 +600,35 @@ func testAnalyzer(t *testing.T, when spec.G, it spec.S) {
 
 					h.AssertPathExists(t, filepath.Join(copyDir, "layers", "some-buildpack-id", "some-layer.sha"))
 					h.AssertPathExists(t, filepath.Join(copyDir, "layers", "some-buildpack-id", "some-layer.toml"))
+				})
+
+				when("CNB_REGISTRY_AUTH is not provided", func() {
+					when("DOCKER_CONFIG is set", func() {
+						it("succeeds", func() {
+							h.DockerRunAndCopy(t,
+								containerName,
+								copyDir,
+								analyzeImage,
+								"/layers",
+								h.WithFlags(
+									"--env", "DOCKER_CONFIG=/registry-docker-config",
+									"--network", "host",
+								),
+								h.WithBash(
+									// ensure docker config directory is root owned and NOT world readable
+									fmt.Sprintf(
+										"chown -R root /registry-docker-config; chmod -R 700 /registry-docker-config; %s -cache-image %s %s",
+										analyzerPath,
+										cacheImage,
+										appImage,
+									),
+								),
+							)
+
+							h.AssertPathExists(t, filepath.Join(copyDir, "layers", "some-buildpack-id", "some-layer.sha"))
+							h.AssertPathExists(t, filepath.Join(copyDir, "layers", "some-buildpack-id", "some-layer.toml"))
+						})
+					})
 				})
 			})
 

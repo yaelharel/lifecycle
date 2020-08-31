@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/buildpacks/lifecycle"
+	"github.com/buildpacks/lifecycle/auth"
 	"github.com/buildpacks/lifecycle/cmd"
 	"github.com/buildpacks/lifecycle/priv"
 )
@@ -38,6 +39,7 @@ func (r *restoreCmd) Args(nargs int, args []string) error {
 }
 
 func (r *restoreCmd) Privileges() error {
+	r.setEnvRegistryAuth()
 	if err := priv.EnsureOwner(r.uid, r.gid, r.layersDir, r.cacheDir); err != nil {
 		cmd.FailErr(err, "chown volumes")
 	}
@@ -60,6 +62,13 @@ func (r *restoreCmd) Exec() error {
 		return err
 	}
 	return restore(r.layersDir, group, cacheStore)
+}
+
+func (r *restoreCmd) setEnvRegistryAuth() {
+	if r.cacheImageTag == "" {
+		return
+	}
+	auth.NewKeychain(cmd.EnvRegistryAuth, r.cacheImageTag)
 }
 
 func restore(layersDir string, group lifecycle.BuildpackGroup, cacheStore lifecycle.Cache) error {
