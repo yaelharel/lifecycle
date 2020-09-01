@@ -116,7 +116,7 @@ func (a *analyzeCmd) setEnvRegistryAuth() {
 	if !a.useDaemon {
 		registryImages = append(registryImages, a.analyzeArgs.imageName)
 	}
-	auth.NewKeychain(cmd.EnvRegistryAuth, registryImages...)
+	auth.SetEnvVar(cmd.EnvRegistryAuth, registryImages...)
 }
 
 func (aa analyzeArgs) analyze(group lifecycle.BuildpackGroup, cacheStore lifecycle.Cache) (lifecycle.AnalyzedMetadata, error) {

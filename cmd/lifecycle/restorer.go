@@ -68,7 +68,7 @@ func (r *restoreCmd) setEnvRegistryAuth() {
 	if r.cacheImageTag == "" {
 		return
 	}
-	auth.NewKeychain(cmd.EnvRegistryAuth, r.cacheImageTag)
+	auth.SetEnvVar(cmd.EnvRegistryAuth, r.cacheImageTag)
 }
 
 func restore(layersDir string, group lifecycle.BuildpackGroup, cacheStore lifecycle.Cache) error {

@@ -186,5 +186,5 @@ func (c *createCmd) setEnvRegistryAuth() {
 		registryImages = append(registryImages, append([]string{c.imageName}, c.additionalTags...)...)
 		registryImages = append(registryImages, c.runImageRef)
 	}
-	auth.NewKeychain(cmd.EnvRegistryAuth, registryImages...)
+	auth.SetEnvVar(cmd.EnvRegistryAuth, registryImages...)
 }

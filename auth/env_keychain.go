@@ -12,28 +12,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-// NewKeychain returns an EnvKeychain based on the provided environment variable.
-// If the provided environment variable is not set, NewKeychain will build an auth config
-// from authn.DefaultKeychain and set the variable in the environment.
-// If any errors are encountered, NewKeychain will return an anonymous keychain.
-func NewKeychain(envVar string, images ...string) authn.Keychain {
+// NewKeychain returns either a EnvKeychain or a authn.DefaultKeychain depending on whether the provided environment variable is set
+func NewKeychain(envVar string) authn.Keychain {
 	_, ok := os.LookupEnv(envVar)
 	if !ok {
-		authConfig, err := BuildEnvVar(authn.DefaultKeychain, images...)
-		if err != nil {
-			return &AnonymousKeychain{}
-		}
-		if err = os.Setenv(envVar, authConfig); err != nil {
-			return &AnonymousKeychain{}
-		}
+		return authn.DefaultKeychain
 	}
 	return &EnvKeychain{EnvVar: envVar}
-}
-
-type AnonymousKeychain struct{}
-
-func (k *AnonymousKeychain) Resolve(resource authn.Resource) (authn.Authenticator, error) {
-	return authn.Anonymous, nil
 }
 
 // EnvKeychain uses the contents of an environment variable to resolve auth for a registry
@@ -66,6 +51,23 @@ type providedAuth struct {
 
 func (p *providedAuth) Authorization() (*authn.AuthConfig, error) {
 	return p.config, nil
+}
+
+// SetEnvVar will build an auth config from authn.DefaultKeychain and set the provided variable
+// in the environment, if not already set.
+// If any errors are encountered, SetEnvVar will return an error.
+func SetEnvVar(envVar string, images ...string) error {
+	_, ok := os.LookupEnv(envVar)
+	if !ok {
+		authConfig, err := BuildEnvVar(authn.DefaultKeychain, images...)
+		if err != nil {
+			return err
+		}
+		if err = os.Setenv(envVar, authConfig); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // ReadEnvVar parses an environment variable to produce a map of 'registry url' to 'authorization header'.

@@ -155,7 +155,7 @@ func (e *exportCmd) setEnvRegistryAuth() {
 		registryImages = append(registryImages, e.imageNames...)
 		registryImages = append(registryImages, e.runImageRef)
 	}
-	auth.NewKeychain(cmd.EnvRegistryAuth, registryImages...)
+	auth.SetEnvVar(cmd.EnvRegistryAuth, registryImages...)
 }
 
 func (ea exportArgs) export(group lifecycle.BuildpackGroup, cacheStore lifecycle.Cache, analyzedMD lifecycle.AnalyzedMetadata) error {

@@ -145,5 +145,5 @@ func (r *rebaseCmd) Exec() error {
 }
 
 func (r *rebaseCmd) setEnvRegistryAuth() {
-	auth.NewKeychain(cmd.EnvRegistryAuth, r.imageNames...)
+	auth.SetEnvVar(cmd.EnvRegistryAuth, r.imageNames...)
 }

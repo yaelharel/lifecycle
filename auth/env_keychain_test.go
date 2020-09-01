@@ -28,6 +28,38 @@ func testEnvKeychain(t *testing.T, when spec.G, it spec.S) {
 			it.Before(func() {
 				err := os.Setenv(
 					"CNB_REGISTRY_AUTH",
+					`foo`,
+				)
+				h.AssertNil(t, err)
+			})
+
+			it.After(func() {
+				err := os.Unsetenv("CNB_REGISTRY_AUTH")
+				h.AssertNil(t, err)
+			})
+
+			it("returns an EnvKeychain", func() {
+				envKeyChain := auth.NewKeychain("CNB_REGISTRY_AUTH")
+				_, ok := envKeyChain.(*auth.EnvKeychain)
+				if ok != true {
+					t.Fatalf("expected *auth.EnvKeychain, got %s", reflect.TypeOf(envKeyChain))
+				}
+			})
+		})
+
+		when("CNB_REGISTRY_AUTH is not set", func() {
+			it("returns the ggcr DefaultKeychain", func() {
+				envKeyChain := auth.NewKeychain("CNB_REGISTRY_AUTH")
+				h.AssertEq(t, envKeyChain, authn.DefaultKeychain)
+			})
+		})
+	})
+
+	when("#SetEnvVar", func() {
+		when("CNB_REGISTRY_AUTH is set", func() {
+			it.Before(func() {
+				err := os.Setenv(
+					"CNB_REGISTRY_AUTH",
 					`some-auth-value`,
 				)
 				h.AssertNil(t, err)
@@ -38,13 +70,8 @@ func testEnvKeychain(t *testing.T, when spec.G, it spec.S) {
 				h.AssertNil(t, err)
 			})
 
-			it("returns an EnvKeychain from the existing CNB_REGISTRY_AUTH", func() {
-				keychain := auth.NewKeychain("CNB_REGISTRY_AUTH")
-				envKeychain, ok := keychain.(*auth.EnvKeychain)
-				if ok != true {
-					t.Fatalf("expected *auth.EnvKeychain, got %s", reflect.TypeOf(keychain))
-				}
-				h.AssertEq(t, envKeychain.EnvVar, "CNB_REGISTRY_AUTH")
+			it("does not replace the existing value", func() {
+				h.AssertNil(t, auth.SetEnvVar("CNB_REGISTRY_AUTH"))
 				h.AssertEq(t, os.Getenv("CNB_REGISTRY_AUTH"), "some-auth-value")
 			})
 		})
@@ -80,25 +107,15 @@ func testEnvKeychain(t *testing.T, when spec.G, it spec.S) {
 				})
 
 				when("passed no images", func() {
-					it("returns an empty EnvKeychain from the DefaultKeychain", func() {
-						keychain := auth.NewKeychain("CNB_REGISTRY_AUTH")
-						envKeychain, ok := keychain.(*auth.EnvKeychain)
-						if ok != true {
-							t.Fatalf("expected *auth.EnvKeychain, got %s", reflect.TypeOf(keychain))
-						}
-						h.AssertEq(t, envKeychain.EnvVar, "CNB_REGISTRY_AUTH")
+					it("sets CNB_REGISTRY_AUTH to an empty auth config", func() {
+						h.AssertNil(t, auth.SetEnvVar("CNB_REGISTRY_AUTH"))
 						h.AssertEq(t, os.Getenv("CNB_REGISTRY_AUTH"), "{}")
 					})
 				})
 
 				when("passed images", func() {
-					it("returns an EnvKeychain from the DefaultKeychain", func() {
-						keychain := auth.NewKeychain("CNB_REGISTRY_AUTH", "localhost:5000/some-image")
-						envKeychain, ok := keychain.(*auth.EnvKeychain)
-						if ok != true {
-							t.Fatalf("expected *auth.EnvKeychain, got %s", reflect.TypeOf(keychain))
-						}
-						h.AssertEq(t, envKeychain.EnvVar, "CNB_REGISTRY_AUTH")
+					it("sets CNB_REGISTRY_AUTH to a valid config", func() {
+						h.AssertNil(t, auth.SetEnvVar("CNB_REGISTRY_AUTH", "localhost:5000/some-image"))
 						h.AssertEq(t, os.Getenv("CNB_REGISTRY_AUTH"), "{\"localhost:5000\":\"Basic dXNlcm5hbWU6cGFzc3dvcmQ=\"}")
 					})
 				})
@@ -110,31 +127,10 @@ func testEnvKeychain(t *testing.T, when spec.G, it spec.S) {
 					h.AssertNil(t, ioutil.WriteFile(filepath.Join(tmpDir, "config.json"), content, 0755))
 				})
 
-				it("returns an empty EnvKeychain from the DefaultKeychain", func() {
-					keychain := auth.NewKeychain("CNB_REGISTRY_AUTH")
-					envKeychain, ok := keychain.(*auth.EnvKeychain)
-					if ok != true {
-						t.Fatalf("expected *auth.EnvKeychain, got %s", reflect.TypeOf(keychain))
-					}
-					h.AssertEq(t, envKeychain.EnvVar, "CNB_REGISTRY_AUTH")
+				it("sets CNB_REGISTRY_AUTH to an empty auth config", func() {
+					h.AssertNil(t, auth.SetEnvVar("CNB_REGISTRY_AUTH"))
 					h.AssertEq(t, os.Getenv("CNB_REGISTRY_AUTH"), "{}")
 				})
-			})
-		})
-	})
-
-	when("#AnonymousKeychain", func() {
-		when("#Resolve", func() {
-			it("returns an Anonymous authenticator", func() {
-				anonymousKeychain := &auth.AnonymousKeychain{}
-
-				registry, err := name.NewRegistry("some-registry.com", name.WeakValidation)
-				h.AssertNil(t, err)
-
-				authenticator, err := anonymousKeychain.Resolve(registry)
-				h.AssertNil(t, err)
-
-				h.AssertEq(t, authenticator, authn.Anonymous)
 			})
 		})
 	})
