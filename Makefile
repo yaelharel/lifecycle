@@ -4,12 +4,11 @@ PWD?=$(subst /,\,${CURDIR})
 LDFLAGS=-s -w
 BLANK:=
 /:=\$(BLANK)
-LIFECYCLE_VERSION?=$(shell type VERSION)
 else
 /:=/
-LIFECYCLE_VERSION?=$(shell cat VERSION)
 endif
 
+LIFECYCLE_VERSION?=$(shell git describe --tags | sed 's/^.//')
 GOCMD?=go
 GOARCH?=amd64
 GOENV=GOARCH=$(GOARCH) CGO_ENABLED=0
