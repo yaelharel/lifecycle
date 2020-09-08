@@ -1,0 +1,4 @@
+node_modules/
+changelog.md
+
+### TODO: think whether we can have one changelog directory for both pack and lifecycle
