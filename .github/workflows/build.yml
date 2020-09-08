@@ -146,5 +146,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./lifecycle-windows-x86-64.tgz
-            asset_name: lifecycle-v${{ env.LIFECYCLE_VERSION }}+windows.x86-64.tgz
-            asset_content_type: application/gzip
+          asset_name: lifecycle-v${{ env.LIFECYCLE_VERSION }}+windows.x86-64.tgz
+          asset_content_type: application/gzip
