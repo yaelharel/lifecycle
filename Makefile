@@ -12,7 +12,7 @@ LIFECYCLE_VERSION?=$(shell git describe --tags | sed 's/^.//')
 GOCMD?=go
 GOARCH?=amd64
 GOENV=GOARCH=$(GOARCH) CGO_ENABLED=0
-LIFECYCLE_DESCRIPTOR_PATH?=lifecycle.toml
+LIFECYCLE_DESCRIPTOR_PATH?=lifecycle.toml # TODO - what happens if lifecycle version has already filled - we want to ignore it
 SCM_REPO?=github.com/buildpacks/lifecycle
 PARSED_COMMIT=$(shell git rev-parse --short HEAD)
 SCM_COMMIT?=$(PARSED_COMMIT)
@@ -211,7 +211,7 @@ package-linux: ARCHIVE_PATH=$(BUILD_DIR)/lifecycle-v$(LIFECYCLE_VERSION)+$(GOOS)
 package-linux: PACKAGER=./tools/packager/main.go
 package-linux:
 	@echo "> Packaging lifecycle for $(GOOS)..."
-	$(GOCMD) run $(PACKAGER) --inputDir $(INPUT_DIR) -archivePath $(ARCHIVE_PATH) -descriptorPath $(LIFECYCLE_DESCRIPTOR_PATH)
+	$(GOCMD) run $(PACKAGER) --inputDir $(INPUT_DIR) -archivePath $(ARCHIVE_PATH) -descriptorPath $(LIFECYCLE_DESCRIPTOR_PATH) -version $(LIFECYCLE_VERSION)
 
 package-windows: GOOS:=windows
 package-windows: INPUT_DIR:=$(BUILD_DIR)$/$(GOOS)$/lifecycle
@@ -219,7 +219,7 @@ package-windows: ARCHIVE_PATH=$(BUILD_DIR)$/lifecycle-v$(LIFECYCLE_VERSION)+$(GO
 package-windows: PACKAGER=.$/tools$/packager$/main.go
 package-windows:
 	@echo "> Packaging lifecycle for $(GOOS)..."
-	$(GOCMD) run $(PACKAGER) --inputDir $(INPUT_DIR) -archivePath $(ARCHIVE_PATH) -descriptorPath $(LIFECYCLE_DESCRIPTOR_PATH)
+	$(GOCMD) run $(PACKAGER) --inputDir $(INPUT_DIR) -archivePath $(ARCHIVE_PATH) -descriptorPath $(LIFECYCLE_DESCRIPTOR_PATH) -version $(LIFECYCLE_VERSION)
 
 # Ensure workdir is clean and build image from .git
 docker-build-source-image-windows: $(GOFILES)
