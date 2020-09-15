@@ -19,6 +19,7 @@ var (
 	descriptorPath string
 	inputDir       string
 	version        string
+	exitCode       int = 2
 )
 
 // Write contents of inputDir to archive at archivePath
@@ -35,78 +36,49 @@ func main() {
 	}
 
 	f, err := os.OpenFile(archivePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0777)
-	if err != nil {
-		fmt.Printf("Failed to open -archivePath %s: %s", archivePath, err)
-		os.Exit(2)
-	}
+	handle(err, fmt.Sprintf("Failed to open -archivePath %s: %s", archivePath, err))
 	defer f.Close()
+
 	zw := gzip.NewWriter(f)
 	defer zw.Close()
+
 	tw := archive.NewNormalizingTarWriter(tar.NewWriter(zw))
 	tw.WithUID(0)
 	tw.WithGID(0)
 	defer tw.Close()
 
 	templateContents, err := ioutil.ReadFile(descriptorPath)
-	if err != nil {
-		fmt.Printf("Failed read descriptor file at path %s: %s", descriptorPath, err)
-		os.Exit(3)
-	}
+	handle(err, fmt.Sprintf("Failed to read descriptor file %s: %s", descriptorPath, err))
 
 	descriptorContents, err := fillTemplate(templateContents, map[string]interface{}{"lifecycle_version": version})
-	if err != nil {
-		fmt.Printf("Failed fill template: %s", err)
-		os.Exit(4)
-	}
+	handle(err, fmt.Sprintf("Failed to fill template: %s", err))
 
-	descriptorInfo, err := os.Stat(descriptorPath)
-	if err != nil {
-		fmt.Printf("Failed stat descriptor file at path %s: %s", descriptorPath, err)
-		os.Exit(5)
-	}
+	descriptorTemplateInfo, err := os.Stat(descriptorPath)
+	handle(err, fmt.Sprintf("Failed to stat descriptor template file %s: %s", descriptorPath, err))
 
 	tempDir, err := ioutil.TempDir("", "lifecycle-descriptor")
-	if err != nil {
-		fmt.Printf("Failed to create a temp directory: %s", err)
-		os.Exit(6)
-	}
+	handle(err, fmt.Sprintf("Failed to create a temp directory: %s", err))
 
 	tempFile, err := os.Create(filepath.Join(tempDir, "lifecycle.toml"))
-	if err != nil {
-		fmt.Printf("Failed create a temp file: %s", err)
-		os.Exit(7)
-	}
+	handle(err, fmt.Sprintf("Failed to create a temp file: %s", err))
 
-	if err := ioutil.WriteFile(tempFile.Name(), descriptorContents, descriptorInfo.Mode()); err != nil {
-		fmt.Printf("Failed to write descriptor contents to tempFile %s: %s", tempFile.Name(), err)
-		os.Exit(8)
-	}
+	err = ioutil.WriteFile(tempFile.Name(), descriptorContents, descriptorTemplateInfo.Mode())
+	handle(err, fmt.Sprintf("Failed to write descriptor contents to file %s: %s", tempFile.Name(), err))
 
-	if err := os.Chdir(tempDir); err != nil {
-		fmt.Printf("Failed to switch directories to %s: %s", filepath.Dir(tempDir), err)
-		os.Exit(9)
-	}
+	err = os.Chdir(tempDir)
+	handle(err, fmt.Sprintf("Failed to switch directories to %s: %s", tempDir, err))
 
-	descriptorInfo, err = os.Stat(tempFile.Name())
-	if err != nil {
-		fmt.Printf("Failed stat descriptor file at path %s: %s", tempFile.Name(), err)
-		os.Exit(10000)
-	}
+	descriptorInfo, err := os.Stat(tempFile.Name())
+	handle(err, fmt.Sprintf("Failed to stat descriptor file %s: %s", tempFile.Name(), err))
 
-	if err := archive.AddFileToArchive(tw, "lifecycle.toml", descriptorInfo); err != nil {
-		fmt.Printf("Failed to write descriptor to archive: %s\ntempDir: %s\ntempFile:%s\n", err, tempDir, tempFile.Name())
-		os.Exit(10)
-	}
+	err = archive.AddFileToArchive(tw, "lifecycle.toml", descriptorInfo)
+	handle(err, fmt.Sprintf("Failed to write descriptor to archive: %s", err))
 
-	if err := os.Chdir(filepath.Dir(inputDir)); err != nil {
-		fmt.Printf("Failed to switch directories to %s: %s", filepath.Dir(inputDir), err)
-		os.Exit(11)
-	}
+	err = os.Chdir(filepath.Dir(inputDir))
+	handle(err, fmt.Sprintf("Failed to switch directories to %s: %s", filepath.Dir(inputDir), err))
 
-	if err := archive.AddDirToArchive(tw, filepath.Base(inputDir)); err != nil {
-		fmt.Printf("Failed to write dir to archive: %s", err)
-		os.Exit(12)
-	}
+	err = archive.AddDirToArchive(tw, filepath.Base(inputDir))
+	handle(err, fmt.Sprintf("Failed to write dir to archive: %s", err))
 }
 
 func fillTemplate(templateContents []byte, data map[string]interface{}) ([]byte, error) {
@@ -122,4 +94,12 @@ func fillTemplate(templateContents []byte, data map[string]interface{}) ([]byte,
 	}
 
 	return templatedContent.Bytes(), nil
+}
+
+func handle(err error, msg string) {
+	if err != nil {
+		fmt.Println(msg)
+		os.Exit(exitCode)
+	}
+	exitCode++
 }
