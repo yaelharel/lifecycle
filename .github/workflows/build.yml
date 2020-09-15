@@ -26,7 +26,7 @@ jobs:
         shell: bash
       - name: Set lifecycle version
         run: |
-          version=$(git describe --tags | sed 's/^.//')
+          version=$(git describe --always --dirty)
           echo "::set-env name=LIFECYCLE_VERSION::$version"
         shell: bash
       - name: Install jq
@@ -60,7 +60,7 @@ jobs:
           go-version: '1.14'
       - name: Set lifecycle version
         run: |
-          version=$(git describe --tags | sed 's/^.//')
+          version=$(git describe --always --dirty)
           echo "::set-env name=LIFECYCLE_VERSION::$version"
         shell: bash
       - name: Install jq

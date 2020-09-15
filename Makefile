@@ -8,7 +8,7 @@ else
 /:=/
 endif
 
-LIFECYCLE_VERSION?=$(shell git describe --tags | sed 's/^.//')
+LIFECYCLE_VERSION?=$(shell git describe --always --dirty)
 GOCMD?=go
 GOARCH?=amd64
 GOENV=GOARCH=$(GOARCH) CGO_ENABLED=0
@@ -40,15 +40,13 @@ build-windows: build-windows-lifecycle build-windows-symlinks build-windows-laun
 
 build-image-linux: build-linux package-linux
 build-image-linux: ARCHIVE_PATH=$(BUILD_DIR)/lifecycle-v$(LIFECYCLE_VERSION)+linux.x86-64.tgz
-build-image-linux: TAG=$(shell git describe --always --dirty)
 build-image-linux:
-	$(GOCMD) run ./tools/image/main.go -daemon -lifecyclePath $(ARCHIVE_PATH) -os linux -tag lifecycle:$(TAG)
+	$(GOCMD) run ./tools/image/main.go -daemon -lifecyclePath $(ARCHIVE_PATH) -os linux -tag lifecycle:$(LIFECYCLE_VERSION)
 
 build-image-windows: build-windows package-windows
 build-image-windows: ARCHIVE_PATH=$(BUILD_DIR)/lifecycle-v$(LIFECYCLE_VERSION)+windows.x86-64.tgz
-build-image-windows: TAG=$(shell git describe --always --dirty)
 build-image-windows:
-	$(GOCMD) run ./tools/image/main.go -daemon -lifecyclePath $(ARCHIVE_PATH) -os windows -tag lifecycle:$(TAG)
+	$(GOCMD) run ./tools/image/main.go -daemon -lifecyclePath $(ARCHIVE_PATH) -os windows -tag lifecycle:$(LIFECYCLE_VERSION)
 
 build-linux-lifecycle: $(BUILD_DIR)/linux/lifecycle/lifecycle
 
