@@ -9,11 +9,18 @@ on:
     branches:
       - main
       - 'release/**'
+  workflow_dispatch:
+    inputs:
+      foo:
+        default: 'bar'
 
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
     steps:
+      - name: test
+        run: |
+          echo "Foo: ${{ github.event.inputs.foo }}"
       - uses: actions/checkout@v2
       - name: Set up go
         uses: actions/setup-go@v2-beta
@@ -92,6 +99,9 @@ jobs:
       - test-and-build-windows
     runs-on: ubuntu-latest
     steps:
+      - name: test
+          run: |
+            echo "Foo: ${{ github.event.inputs.foo }}"
       - uses: actions/checkout@v2
       - name: Derive lifecycle version from branch name
         run: |
