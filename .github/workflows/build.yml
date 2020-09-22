@@ -42,7 +42,7 @@ jobs:
           path: out/lifecycle-v*+linux.x86-64.tgz
       - name: Publish lifecycle image
         run: |
-          LIFECYCLE_IMAGE_TAG=`git describe --always --dirty`
+          LIFECYCLE_IMAGE_TAG=$(git describe --always --dirty)
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
           go run ./tools/image/main.go -lifecyclePath ./out/lifecycle-v*+linux.x86-64.tgz -tag yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux -tag yaelharel/lifecycle:latest-linux
   test-and-build-windows:
@@ -74,7 +74,7 @@ jobs:
           path: out/lifecycle-v*+windows.x86-64.tgz
       - name: Publish lifecycle image
         run: |
-          LIFECYCLE_IMAGE_TAG=`git describe --always --dirty`
+          $LIFECYCLE_IMAGE_TAG=$(git describe --always --dirty)
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
           go run ./tools/image/main.go -lifecyclePath ./out/lifecycle-v*+windows.x86-64.tgz -tag yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows -tag yaelharel/lifecycle:latest-windows
   create-lifecycle-image-manifest-list:
@@ -86,7 +86,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Create Manifest List
         run: |
-          LIFECYCLE_IMAGE_TAG=`git describe --always --dirty`
+          LIFECYCLE_IMAGE_TAG=$(git describe --always --dirty)
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
           DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG} yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows
           DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}
