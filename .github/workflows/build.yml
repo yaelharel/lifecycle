@@ -44,9 +44,11 @@ jobs:
           path: out/lifecycle-v*+linux.x86-64.tgz
       - name: Publish lifecycle image
         run: |
+          if [[ ${{ github.event_name }} != 'push' ]]; then exit 0; fi
           LIFECYCLE_IMAGE_TAG=$(git describe --always --dirty)
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
           go run ./tools/image/main.go -lifecyclePath ./out/lifecycle-v*+linux.x86-64.tgz -tag yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux
+        shell: bash
   test-and-build-windows:
     runs-on: windows-latest
     steps:
@@ -78,11 +80,14 @@ jobs:
           path: out/lifecycle-v*+windows.x86-64.tgz
       - name: Publish lifecycle image
         run: |
+          If ("${{ github.event_name }}" -Ne 'push') { exit }
           $LIFECYCLE_IMAGE_TAG=$(git describe --always --dirty)
           $LIFECYCLE_VERSION=$(go run ./tools/version/main.go)
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
           go run ./tools/image/main.go -lifecyclePath ./out/lifecycle-v${LIFECYCLE_VERSION}+windows.x86-64.tgz -tag yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows
+        shell: powershell
   create-lifecycle-image-manifest-list:
+    if: github.event_name == 'push'
     needs:
       - test-and-build-linux
       - test-and-build-windows
