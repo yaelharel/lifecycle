@@ -46,7 +46,7 @@ jobs:
         run: |
           LIFECYCLE_IMAGE_TAG=$(git describe --always --dirty)
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          go run ./tools/image/main.go -lifecyclePath ./out/lifecycle-v*+linux.x86-64.tgz -tag yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux -tag yaelharel/lifecycle:latest-linux
+          go run ./tools/image/main.go -lifecyclePath ./out/lifecycle-v*+linux.x86-64.tgz -tag yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux
   test-and-build-windows:
     runs-on: windows-latest
     steps:
@@ -81,7 +81,7 @@ jobs:
           $LIFECYCLE_IMAGE_TAG=$(git describe --always --dirty)
           $LIFECYCLE_VERSION=$(go run ./tools/version/main.go)
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          go run ./tools/image/main.go -lifecyclePath ./out/lifecycle-v${LIFECYCLE_VERSION}+windows.x86-64.tgz -tag yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows -tag yaelharel/lifecycle:latest-windows
+          go run ./tools/image/main.go -lifecyclePath ./out/lifecycle-v${LIFECYCLE_VERSION}+windows.x86-64.tgz -tag yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows
   create-lifecycle-image-manifest-list:
     needs:
       - test-and-build-linux
@@ -95,5 +95,3 @@ jobs:
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
           DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG} yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows
           DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}
-          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create yaelharel/lifecycle:latest yaelharel/lifecycle:latest-linux yaelharel/lifecycle:latest-windows
-          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push yaelharel/lifecycle:latest
