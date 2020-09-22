@@ -6,21 +6,37 @@ import (
 	"regexp"
 )
 
-var version string
 
 func main() {
-	// TODO: all we're doing is trimming off the v - do we need this? We are also trimming off the 'g' in SCM commit...
-	cmd := exec.Command("git", "describe", "--tags")
+
+	// if the current branch is a release branch, parse the version number from the branch
+
+	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println("0.0.0") // TODO: should we exit with error?
+		return
 	}
-	re := regexp.MustCompile("v(?P<version>.+)-(?P<commits>.+)-g(?P<sha>.+)")
+	re := regexp.MustCompile("release/(?P<version>.+)")
 	matches := re.FindStringSubmatch(string(output))
+	if len(matches) == 2 {
+		fmt.Println(matches[1])
+		return
+	}
+
+	// otherwise parse the version from git history (remove leading 'v' and the 'g' in front of commit sha)
+
+	cmd = exec.Command("git", "describe", "--tags")
+	output, err = cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println("0.0.0") // TODO: should we exit with error?
+		return
+	}
+	re = regexp.MustCompile("v(?P<version>.+)-(?P<commits>.+)-g(?P<sha>.+)")
+	matches = re.FindStringSubmatch(string(output))
 	if len(matches) != 4 {
 		fmt.Println("0.0.0") // TODO: should we exit with error?
+		return
 	}
 	fmt.Println(matches[1] + "-" + matches[2] + "+" + matches[3])
-
-
 }

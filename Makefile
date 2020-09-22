@@ -14,6 +14,7 @@ LIFECYCLE_VERSION:=$(shell go run tools/version/main.go)
 else
 LIFECYCLE_IMAGE_TAG?=$(LIFECYCLE_VERSION)
 endif
+
 GOCMD?=go
 GOARCH?=amd64
 GOENV=GOARCH=$(GOARCH) CGO_ENABLED=0
