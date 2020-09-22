@@ -8,7 +8,12 @@ else
 /:=/
 endif
 
-LIFECYCLE_VERSION?=$(shell git describe --always --dirty)
+ifeq ($(LIFECYCLE_VERSION),)
+LIFECYCLE_IMAGE_TAG?=$(shell git describe --always --dirty) # TODO: do we want the --dirty here? Should it be in the version as well?
+LIFECYCLE_VERSION:=$(shell go run tools/version/main.go)
+else
+LIFECYCLE_IMAGE_TAG?=$(LIFECYCLE_VERSION)
+endif
 GOCMD?=go
 GOARCH?=amd64
 GOENV=GOARCH=$(GOARCH) CGO_ENABLED=0
@@ -41,12 +46,12 @@ build-windows: build-windows-lifecycle build-windows-symlinks build-windows-laun
 build-image-linux: build-linux package-linux
 build-image-linux: ARCHIVE_PATH=$(BUILD_DIR)/lifecycle-v$(LIFECYCLE_VERSION)+linux.x86-64.tgz
 build-image-linux:
-	$(GOCMD) run ./tools/image/main.go -daemon -lifecyclePath $(ARCHIVE_PATH) -os linux -tag lifecycle:$(LIFECYCLE_VERSION)
+	$(GOCMD) run ./tools/image/main.go -daemon -lifecyclePath $(ARCHIVE_PATH) -os linux -tag lifecycle:$(LIFECYCLE_IMAGE_TAG)
 
 build-image-windows: build-windows package-windows
 build-image-windows: ARCHIVE_PATH=$(BUILD_DIR)/lifecycle-v$(LIFECYCLE_VERSION)+windows.x86-64.tgz
 build-image-windows:
-	$(GOCMD) run ./tools/image/main.go -daemon -lifecyclePath $(ARCHIVE_PATH) -os windows -tag lifecycle:$(LIFECYCLE_VERSION)
+	$(GOCMD) run ./tools/image/main.go -daemon -lifecyclePath $(ARCHIVE_PATH) -os windows -tag lifecycle:$(LIFECYCLE_IMAGE_TAG)
 
 build-linux-lifecycle: $(BUILD_DIR)/linux/lifecycle/lifecycle
 
