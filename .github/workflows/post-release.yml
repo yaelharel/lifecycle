@@ -1,4 +1,4 @@
-name: lifecycle-image
+name: post-release
 
 on:
   release:
@@ -23,10 +23,17 @@ jobs:
           echo "::set-env name=LIFECYCLE_IMAGE_TAG::$(git describe --always --dirty)"
       - name: Retag release candidate lifecycle images
         run: |
+          docker pull yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux
           docker image tag yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux yaelharel/lifecycle:${LIFECYCLE_VERSION}-linux
-          docker image tag yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows yaelharel/lifecycle:${LIFECYCLE_VERSION}-windows
           docker image tag yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux yaelharel/lifecycle:latest-linux
+          docker push yaelharel/lifecycle:${LIFECYCLE_VERSION}-linux
+          docker push yaelharel/lifecycle:latest-linux
+
+          docker pull yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows
+          docker image tag yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows yaelharel/lifecycle:${LIFECYCLE_VERSION}-windows
           docker image tag yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows yaelharel/lifecycle:latest-windows
+          docker push yaelharel/lifecycle:${LIFECYCLE_VERSION}-windows
+          docker push yaelharel/lifecycle:latest-windows
       - name: Create lifecycle image manifest lists
         run: |
           DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create yaelharel/lifecycle:${LIFECYCLE_VERSION} yaelharel/lifecycle:${LIFECYCLE_VERSION}-linux yaelharel/lifecycle:${LIFECYCLE_VERSION}-windows
