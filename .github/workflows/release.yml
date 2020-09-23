@@ -4,88 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-and-build-linux:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up go
-        uses: actions/setup-go@v2-beta
-        with:
-          go-version: '1.14'
-      - name: Set up go env
-        run: |
-          echo "::set-env name=GOPATH::$(go env GOPATH)"
-          echo "::add-path::$(go env GOPATH)/bin"
-        shell: bash
-      - name: Derive lifecycle version from branch name
-        run: |
-          [[ $GITHUB_REF =~ ^refs\/heads\/release/(.*)$ ]] && version=${BASH_REMATCH[1]}
-          if [[ -z "${version}" ]]; then
-            echo "lifecycle version not detected."
-            exit 1
-          fi
-          echo "::set-env name=LIFECYCLE_VERSION::$version"
-        shell: bash
-      - name: Install jq
-        run: |
-          mkdir -p deps/bin
-          curl -s -L -o deps/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
-          chmod +x deps/bin/jq
-          echo "::add-path::${PWD}/deps/bin"
-      #- name: Test
-      #  run: make test
-      - name: Build
-        run: |
-          make build-linux
-          make package-linux
-      - uses: actions/upload-artifact@v2
-        with:
-          name: lifecycle-linux-x86-64
-          path: out/lifecycle-v*+linux.x86-64.tgz
-  test-and-build-windows:
-    runs-on: windows-latest
-    steps:
-      - name: Set git to use LF and symlinks
-        run: |
-          git config --global core.autocrlf false
-          git config --global core.eol lf
-          git config --global core.symlinks true
-      - uses: actions/checkout@v2
-      - name: Set up go
-        uses: actions/setup-go@v2-beta
-        with:
-          go-version: '1.14'
-      - name: Derive lifecycle version from branch name
-        run: |
-          [[ $GITHUB_REF =~ ^refs\/heads\/release/(.*)$ ]] && version=${BASH_REMATCH[1]}
-          if [[ -z "${version}" ]]; then
-            echo "lifecycle version not detected."
-            exit 1
-          fi
-          echo "::set-env name=LIFECYCLE_VERSION::$version"
-        shell: bash
-      - name: Install jq
-        run: choco install jq
-      #- name: Test
-      #  run: make test
-      #  shell: cmd
-      - name: Build
-        run: |
-          make build-windows
-          make package-windows
-        shell: cmd
-      - uses: actions/upload-artifact@v2
-        with:
-          name: lifecycle-windows-x86-64
-          path: out/lifecycle-v*+windows.x86-64.tgz
-
   release:
-    needs:
-      - test-and-build-linux
-      - test-and-build-windows
-      - build-lifecycle-image-linux
-      - build-lifecycle-image-windows
-      - create-lifecycle-image-manifest-list
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -98,14 +17,92 @@ jobs:
           fi
           echo "::set-env name=LIFECYCLE_VERSION::$version"
         shell: bash
-      - name: Download artifacts - linux
-        uses: actions/download-artifact@v1
+      - name: Determine download urls for artifacts from previous workflow run
+        id: artifact-urls
+        uses: actions/github-script@0.8.0
         with:
-          name: lifecycle-linux-x86-64
-      - name: Download artifacts - windows
-        uses: actions/download-artifact@v1
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            return github.actions
+              .listRepoWorkflows({
+                 owner: "yaelharel",
+                 repo: "lifecycle",
+              })
+              .then(workflows_result => {
+                let workflows = workflows_result.data.workflows
+                  .filter(a => a.name === "build" && a.state === "active")
+                  .map(a => a.id);
+                if (workflows.length === 0) {
+                  throw "no active workflows found with name build"
+                }
+                return workflows[0]
+              })
+              .then(workflow_id => {
+                return github.actions.listRepoWorkflowRuns({
+                  owner: "yaelharel",
+                  repo: "lifecycle",
+                  workflow_id: workflow_id,
+                  branch: "release/${{ env.LIFECYCLE_VERSION }}",
+                  event: "push"
+                })
+              })
+              .then(workflow_runs_result => {
+                let workflow_runs = workflow_runs_result.data.workflow_runs
+                  .filter(run => run.conclusion === "success");
+                if (workflow_runs.length === 0) {
+                  throw "no successful workflow runs found for lifecycle master branch"
+                }
+                return workflow_runs[0].id
+              })
+              .then(workflow_runid => {
+                return github.actions.listWorkflowRunArtifacts({
+                  owner: "yaelharel",
+                  repo: "lifecycle",
+                  run_id: workflow_runid
+                })
+              })
+              .then(artifacts_result => {
+                let urls = artifacts_result.data.artifacts
+                  .map(artifact => artifact.archive_download_url);
+                if (urls.length === 0) {
+                  throw "no artifacts found"
+                }
+                return urls
+              })
+      - name: Determine linux download url
+        id: artifact-url-linux
+        uses: actions/github-script@0.8.0
         with:
-          name: lifecycle-windows-x86-64
+          result-encoding: string
+          script: |
+            return ${{ steps.artifact-urls.outputs.result }}.filter(artifact => artifact.name.includes("linux"))
+      - name: Determine windows download url
+        id: artifact-url-windows
+        uses: actions/github-script@0.8.0
+        with:
+          result-encoding: string
+          script: |
+            return ${{ steps.artifact-urls.outputs.result }}.filter(artifact => artifact.name.includes("windows"))
+      - name: Download linux artifact
+        run: |
+          curl -sL -w 'RESP_CODE:%{response_code}\n' \
+            --header 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+            -o artifact-linux.zip \
+            ${{ steps.artifact-url-linux.outputs.result }}
+          mkdir artifact-linux
+          unzip -d artifact-linux artifact-linux.zip
+          lifecycle_path=$(ls artifact-linux/lifecycle-*linux.x86-64.tgz)
+          echo "::set-env name=ARTIFACT_LINUX_PATH::$PWD/$lifecycle_path"
+      - name: Download windows artifact
+        run: |
+          curl -sL -w 'RESP_CODE:%{response_code}\n' \
+            --header 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+            -o artifact-windows.zip \
+            ${{ steps.artifact-url-windows.outputs.result }}
+          mkdir artifact-windows
+          unzip -d artifact-windows artifact-windows.zip
+          lifecycle_path=$(ls artifact-windows/lifecycle-*linux.x86-64.tgz)
+          echo "::set-env name=ARTIFACT_WINDOWS_PATH::$PWD/$lifecycle_path"
       - name: Create Release
         id: create_release
         uses: actions/create-release@latest
@@ -134,7 +131,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./lifecycle-linux-x86-64/lifecycle-v${{ env.LIFECYCLE_VERSION }}+linux.x86-64.tgz
+          asset_path: ${{ env.ARTIFACT_LINUX_PATH }}
           asset_name: lifecycle-v${{ env.LIFECYCLE_VERSION }}+linux.x86-64.tgz
           asset_content_type: application/gzip
       - name: Upload Release Asset - windows
@@ -143,6 +140,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./lifecycle-windows-x86-64/lifecycle-v${{ env.LIFECYCLE_VERSION }}+windows.x86-64.tgz
+          asset_path: ${{ env.ARTIFACT_WINDOWS_PATH }}
           asset_name: lifecycle-v${{ env.LIFECYCLE_VERSION }}+windows.x86-64.tgz
           asset_content_type: application/gzip
