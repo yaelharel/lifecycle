@@ -69,15 +69,15 @@ jobs:
       #- name: Test
       #  run: make test
       #  shell: cmd
-#      - name: Build
-#        run: |
-#          make build-windows
-#          make package-windows
-#        shell: cmd
-#      - uses: actions/upload-artifact@v2
-#        with:
-#          name: lifecycle-windows-x86-64
-#          path: out/lifecycle-v*+windows.x86-64.tgz
+      - name: Build
+        run: |
+          make build-windows
+          make package-windows
+        shell: cmd
+      - uses: actions/upload-artifact@v2
+        with:
+          name: lifecycle-windows-x86-64
+          path: out/lifecycle-v*+windows.x86-64.tgz
       - name: Docker login
         if: github.event_name == 'push'
         run: |
