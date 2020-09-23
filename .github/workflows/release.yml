@@ -17,11 +17,12 @@ jobs:
           fi
           echo "::set-env name=LIFECYCLE_VERSION::$version"
         shell: bash
-      - name: Determine download urls for artifacts from previous workflow run
-        id: artifact-urls
+      - name: Determine download url for linux
+        id: artifact-url-linux
         uses: actions/github-script@0.8.0
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
+          result-encoding: string
           script: |
             return github.actions
               .listRepoWorkflows({
@@ -63,26 +64,67 @@ jobs:
               })
               .then(artifacts_result => {
                 let urls = artifacts_result.data.artifacts
+                  .filter(artifact => artifact.name.includes("linux"))
                   .map(artifact => artifact.archive_download_url);
                 if (urls.length === 0) {
                   throw "no artifacts found"
                 }
-                return urls
+                return urls[0]
               })
-      - name: Determine linux download url
-        id: artifact-url-linux
-        uses: actions/github-script@0.8.0
-        with:
-          result-encoding: string
-          script: |
-            return ${{ steps.artifact-urls.outputs.result }}.filter(artifact => artifact.name.includes("linux"))
-      - name: Determine windows download url
+      - name: Determine download url for windows
         id: artifact-url-windows
         uses: actions/github-script@0.8.0
         with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
           result-encoding: string
           script: |
-            return ${{ steps.artifact-urls.outputs.result }}.filter(artifact => artifact.name.includes("windows"))
+            return github.actions
+              .listRepoWorkflows({
+                 owner: "yaelharel",
+                 repo: "lifecycle",
+              })
+              .then(workflows_result => {
+                let workflows = workflows_result.data.workflows
+                  .filter(a => a.name === "build" && a.state === "active")
+                  .map(a => a.id);
+                if (workflows.length === 0) {
+                  throw "no active workflows found with name build"
+                }
+                return workflows[0]
+              })
+              .then(workflow_id => {
+                return github.actions.listRepoWorkflowRuns({
+                  owner: "yaelharel",
+                  repo: "lifecycle",
+                  workflow_id: workflow_id,
+                  branch: "release/${{ env.LIFECYCLE_VERSION }}",
+                  event: "push"
+                })
+              })
+              .then(workflow_runs_result => {
+                let workflow_runs = workflow_runs_result.data.workflow_runs
+                  .filter(run => run.conclusion === "success");
+                if (workflow_runs.length === 0) {
+                  throw "no successful workflow runs found for lifecycle master branch"
+                }
+                return workflow_runs[0].id
+              })
+              .then(workflow_runid => {
+                return github.actions.listWorkflowRunArtifacts({
+                  owner: "yaelharel",
+                  repo: "lifecycle",
+                  run_id: workflow_runid
+                })
+              })
+              .then(artifacts_result => {
+                let urls = artifacts_result.data.artifacts
+                  .filter(artifact => artifact.name.includes("windows"))
+                  .map(artifact => artifact.archive_download_url);
+                if (urls.length === 0) {
+                  throw "no artifacts found"
+                }
+                return urls[0]
+              })
       - name: Download linux artifact
         run: |
           curl -sL -w 'RESP_CODE:%{response_code}\n' \
