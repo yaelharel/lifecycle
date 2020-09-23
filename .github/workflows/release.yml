@@ -143,7 +143,7 @@ jobs:
             ${{ steps.artifact-url-windows.outputs.result }}
           mkdir artifact-windows
           unzip -d artifact-windows artifact-windows.zip
-          lifecycle_path=$(ls artifact-windows/lifecycle-*linux.x86-64.tgz)
+          lifecycle_path=$(ls artifact-windows/lifecycle-*windows.x86-64.tgz)
           echo "::set-env name=ARTIFACT_WINDOWS_PATH::$PWD/$lifecycle_path"
       - name: Create Release
         id: create_release
