@@ -78,14 +78,10 @@ jobs:
         with:
           name: lifecycle-windows-x86-64
           path: out/lifecycle-v*+windows.x86-64.tgz
-      - name: Docker login
-        if: github.event_name == 'push'
-        run: |
-          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-        shell: cmd
       - name: Publish lifecycle image
         run: |
           If ("${{ github.event_name }}" -Ne 'push') { exit }
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
           $LIFECYCLE_IMAGE_TAG=$(git describe --always --dirty)
           $LIFECYCLE_VERSION=$(go run ./tools/version/main.go)
           go run ./tools/image/main.go -lifecyclePath ./out/lifecycle-v${LIFECYCLE_VERSION}+windows.x86-64.tgz -tag yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows
