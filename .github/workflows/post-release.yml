@@ -1,0 +1,35 @@
+name: lifecycle-image
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  retag-lifecycle-images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up go
+        uses: actions/setup-go@v2-beta
+        with:
+          go-version: '1.14'
+      - name: Docker login
+        run: |
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+      - name: Set env
+        run: |
+          echo "::set-env name=LIFECYCLE_VERSION::$(echo ${{ github.event.release.tag_name }} | cut -d "v" -f2)"
+          echo "::set-env name=LIFECYCLE_IMAGE_TAG::$(git describe --always --dirty)"
+      - name: Retag release candidate lifecycle images
+        run: |
+          docker image tag yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux yaelharel/lifecycle:${LIFECYCLE_VERSION}-linux
+          docker image tag yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows yaelharel/lifecycle:${LIFECYCLE_VERSION}-windows
+          docker image tag yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux yaelharel/lifecycle:latest-linux
+          docker image tag yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows yaelharel/lifecycle:latest-windows
+      - name: Create lifecycle image manifest lists
+        run: |
+          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create yaelharel/lifecycle:${LIFECYCLE_VERSION} yaelharel/lifecycle:${LIFECYCLE_VERSION}-linux yaelharel/lifecycle:${LIFECYCLE_VERSION}-windows
+          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push yaelharel/lifecycle:${LIFECYCLE_VERSION}
+          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create yaelharel/lifecycle:latest yaelharel/lifecycle:latest-linux yaelharel/lifecycle:latest-windows
+          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push yaelharel/lifecycle:latest
