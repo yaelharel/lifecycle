@@ -1,4 +1,4 @@
-name: release
+name: draft-release
 
 on:
   workflow_dispatch:
@@ -166,7 +166,7 @@ jobs:
 
             ## Install
 
-            Extract the `.tgz` file and copy the lifecycle binaries into a [build stack base image](https://github.com/buildpack/spec/blob/master/platform.md#stacks). The build image can then be orchestrated by a platform implementation such as the [pack CLI](https://github.com/buildpack/pack) or [tekton](https://github.com/tektoncd/catalog/blob/master/buildpacks/README.md).
+            Extract the `.tgz` file and copy the lifecycle binaries into a [build stack base image](https://github.com/buildpack/spec/blob/master/platform.md#stacks). The build image can then be orchestrated by a platform implementation such as the [pack CLI](https://github.com/buildpack/pack) or [tekton](https://github.com/tektoncd/catalog/blob/master/task/buildpacks/0.1/README.md).
       - name: Upload Release Asset - linux
         uses: actions/upload-release-asset@v1
         env:
