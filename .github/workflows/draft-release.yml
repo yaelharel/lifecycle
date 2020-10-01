@@ -19,7 +19,7 @@ jobs:
         shell: bash
       - name: Determine download url for linux
         id: artifact-url-linux
-        uses: actions/github-script@0.8.0
+        uses: actions/github-script@v3.0.0
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           result-encoding: string
@@ -73,7 +73,7 @@ jobs:
               })
       - name: Determine download url for windows
         id: artifact-url-windows
-        uses: actions/github-script@0.8.0
+        uses: actions/github-script@v3.0.0
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           result-encoding: string
