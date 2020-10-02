@@ -11,8 +11,9 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/buildpacks/lifecycle/archive"
 	"github.com/pkg/errors"
+
+	"github.com/buildpacks/lifecycle/archive"
 )
 
 var (
@@ -36,7 +37,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := doPackage() ; err != nil {
+	if err := doPackage(); err != nil {
 		fmt.Println(err.Error())
 		os.Exit(2)
 	}
