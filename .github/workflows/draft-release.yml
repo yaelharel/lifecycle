@@ -57,6 +57,7 @@ jobs:
                 return workflow_runs[0].id
               })
               .then(workflow_runid => {
+                console.log("here 0");
                 return github.actions.listWorkflowRunArtifacts({
                   owner: "yaelharel",
                   repo: "lifecycle",
@@ -64,9 +65,11 @@ jobs:
                 })
               })
               .then(artifacts_result => {
+                console.log("here 1");
                 let tuples = artifacts_result.data.artifacts
                   .map(artifact => [artifact.name, artifact.archive_download_url]);
-                urlMap = new Map();
+                console.log("here 2");
+                let urlMap = new Map();
                 tuples.forEach(function(tuple) {
                   if (tuple[0].includes("linux")) {
                     urlMap.set("linux", tuple[1])
@@ -75,12 +78,14 @@ jobs:
                     urlMap.set("windows", tuple[1])
                   }
                 })
+                console.log("here 3");
                 if (urlMap.size === 0) {
                   throw "no artifacts found"
                 }
                 if (urlMap.size != 2) {
                   throw "there should be exactly two artifacts"
                 }
+                console.log("here 4");
                 return urlMap
               })
       - name: Download linux artifact
