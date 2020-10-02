@@ -39,7 +39,7 @@ jobs:
                 return workflows[0]
               })
               .then(workflow_id => {
-                return github.actions.listRepoWorkflowRuns({
+                return github.actions.listWorkflowRunsForRepo({
                   owner: "buildpacks",
                   repo: "lifecycle",
                   workflow_id: workflow_id,
