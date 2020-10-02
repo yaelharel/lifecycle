@@ -90,8 +90,8 @@ jobs:
               })
       - name: Download linux artifact
         run: |
-          echo ${{ steps.artifact-urls.outputs.result."linux" }}
-          url=$(echo ${{ steps.artifact-urls.outputs.result }} | jq .linux )
+          url=$(echo '${{ steps.artifact-urls.outputs.result }}' | jq .linux )
+          echo $url
           curl -sL -w 'RESP_CODE:%{response_code}\n' \
             --header 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
             -o artifact-linux.zip $url
