@@ -50,7 +50,7 @@ jobs:
               .then(workflow_runs_result => {
                 let workflow_runs = workflow_runs_result.data.workflow_runs
                   .filter(run => run.conclusion === "success")
-                  .filter(run => run.head_sha === ${{ github.sha }});
+                  .filter(run => run.head_sha === "${{ github.sha }}");
                 if (workflow_runs.length === 0) {
                   throw "no successful workflow runs found for commit"
                 }
