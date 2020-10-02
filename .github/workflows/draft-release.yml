@@ -8,6 +8,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Install jq
+        run: |
+          mkdir -p deps/bin
+          curl -s -L -o deps/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+          chmod +x deps/bin/jq
+          echo "::add-path::${PWD}/deps/bin"
       - name: Derive lifecycle version from branch name
         run: |
           [[ $GITHUB_REF =~ ^refs\/heads\/release/(.*)$ ]] && version=${BASH_REMATCH[1]}
@@ -84,17 +90,20 @@ jobs:
               })
       - name: Download linux artifact
         run: |
-          echo ${{ steps.artifact-urls.outputs.result }}
+          url=$(echo ${{ steps.artifact-urls.outputs.result }} | jq .linux )
+          curl -sL -w 'RESP_CODE:%{response_code}\n' \
+            --header 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+            -o artifact-linux.zip $url
           mkdir artifact-linux
           unzip -d artifact-linux artifact-linux.zip
           lifecycle_path=$(ls artifact-linux/lifecycle-*linux.x86-64.tgz)
           echo "::set-env name=ARTIFACT_LINUX_PATH::$PWD/$lifecycle_path"
       - name: Download windows artifact
         run: |
+          url=$(echo ${{ steps.artifact-urls.outputs.result }} | jq .windows )
           curl -sL -w 'RESP_CODE:%{response_code}\n' \
             --header 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
-            -o artifact-windows.zip \
-            ${{ steps.artifact-urls.outputs.result.windows }}
+            -o artifact-windows.zip $url
           mkdir artifact-windows
           unzip -d artifact-windows artifact-windows.zip
           lifecycle_path=$(ls artifact-windows/lifecycle-*windows.x86-64.tgz)
