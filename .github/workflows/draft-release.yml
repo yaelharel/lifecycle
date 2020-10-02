@@ -22,7 +22,7 @@ jobs:
         uses: actions/github-script@v3.0.0
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
-          result-encoding: json
+          result-encoding: string
           script: |
             return github.actions
               .listRepoWorkflows({
@@ -81,7 +81,7 @@ jobs:
                 if (urlMap.size != 2) {
                   throw "there should be exactly two artifacts"
                 }
-                return urlMap
+                return JSON.stringify(urlMap)
               })
       - name: Download linux artifact
         run: |
