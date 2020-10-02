@@ -28,7 +28,7 @@ jobs:
         uses: actions/github-script@v3.0.0
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
-          result-encoding: string
+          result-encoding: json
           script: |
             return github.actions
               .listRepoWorkflows({
@@ -86,10 +86,11 @@ jobs:
                 if (urlMap.size != 2) {
                   throw "there should be exactly two artifacts"
                 }
-                return JSON.stringify(Object.fromEntries(urlMap.entries()))
+                return Object.fromEntries(urlMap.entries())
               })
       - name: Download linux artifact
         run: |
+          echo ${{ steps.artifact-urls.outputs.result }}
           url=$(echo ${{ steps.artifact-urls.outputs.result }} | jq .linux )
           curl -sL -w 'RESP_CODE:%{response_code}\n' \
             --header 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
