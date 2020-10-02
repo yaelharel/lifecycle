@@ -85,10 +85,7 @@ jobs:
               })
       - name: Download linux artifact
         run: |
-          curl -sL -w 'RESP_CODE:%{response_code}\n' \
-            --header 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
-            -o artifact-linux.zip \
-            ${{ steps.artifact-urls.outputs.result."linux" }}
+          echo ${{ steps.artifact-urls.outputs.result }}
           mkdir artifact-linux
           unzip -d artifact-linux artifact-linux.zip
           lifecycle_path=$(ls artifact-linux/lifecycle-*linux.x86-64.tgz)
@@ -98,7 +95,7 @@ jobs:
           curl -sL -w 'RESP_CODE:%{response_code}\n' \
             --header 'Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
             -o artifact-windows.zip \
-            ${{ steps.artifact-urls.outputs.result."windows" }}
+            ${{ steps.artifact-urls.outputs.result.windows }}
           mkdir artifact-windows
           unzip -d artifact-windows artifact-windows.zip
           lifecycle_path=$(ls artifact-windows/lifecycle-*windows.x86-64.tgz)
