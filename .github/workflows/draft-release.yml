@@ -75,10 +75,10 @@ jobs:
                     urlMap.set("windows", tuple[1])
                   }
                 })
-                if (urlMap.length === 0) {
+                if (urlMap.size === 0) {
                   throw "no artifacts found"
                 }
-                if (urlMap.length != 2) {
+                if (urlMap.size != 2) {
                   throw "there should be exactly two artifacts"
                 }
                 return urlMap
