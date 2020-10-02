@@ -81,7 +81,7 @@ jobs:
                 if (urlMap.size != 2) {
                   throw "there should be exactly two artifacts"
                 }
-                return JSON.stringify(urlMap)
+                return JSON.stringify(Object.fromEntries(urlMap.entries()))
               })
       - name: Download linux artifact
         run: |
