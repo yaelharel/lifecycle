@@ -107,7 +107,7 @@ jobs:
           if [[ ${{ github.event_name }} != 'push' ]]; then exit 0; fi
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
           LIFECYCLE_IMAGE_TAG=$(git describe --always --dirty)
-          go run ./tools/image/main.go -lifecyclePath ./lifecycle-linux-x86-64/lifecycle-v*+linux.x86-64.tgz -tag buildpacksio/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux
-          go run ./tools/image/main.go -lifecyclePath ./lifecycle-windows-x86-64/lifecycle-v*+windows.x86-64.tgz -tag buildpacksio/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows -os windows
-          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create buildpacksio/lifecycle:${LIFECYCLE_IMAGE_TAG} buildpacksio/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux buildpacksio/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows
-          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push buildpacksio/lifecycle:${LIFECYCLE_IMAGE_TAG}
+          go run ./tools/image/main.go -lifecyclePath ./lifecycle-linux-x86-64/lifecycle-v*+linux.x86-64.tgz -tag yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux
+          go run ./tools/image/main.go -lifecyclePath ./lifecycle-windows-x86-64/lifecycle-v*+windows.x86-64.tgz -tag yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows -os windows
+          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG} yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-linux yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}-windows
+          DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push yaelharel/lifecycle:${LIFECYCLE_IMAGE_TAG}
