@@ -88,7 +88,7 @@ jobs:
                 }
                 return Object.fromEntries(urlMap.entries())
               })
-      - name: Download linux artifact
+      - name: Download linux artifact FOO
         run: |
           url=$(echo '${{ steps.artifact-urls.outputs.result }}' | jq -r .linux )
           curl -sL -w 'RESP_CODE:%{response_code}\n' \
