@@ -70,7 +70,7 @@ type BuildpackLayersMetadata struct {
 
 type BuildpackLayerMetadata struct {
 	LayerMetadata
-	layertypes.LayerMetadataFile
+	layertypes.LayerMetadataFile // TODO: YAEL - is it ok to change this package?
 }
 
 type RunImageMetadata struct {

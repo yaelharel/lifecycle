@@ -197,10 +197,24 @@ func containsName(unmet []Unmet, name string) bool {
 
 // layer content metadata
 
+type Layer interface {
+	Metadata() interface{}
+	Build()    bool
+	Launch()   bool
+	Cache()    bool
+}
+
+/*
+Data   interface{} `json:"data" toml:"metadata"`
+Build  bool        `json:"build" toml:"build"`
+Launch bool        `json:"launch" toml:"launch"`
+Cache  bool        `json:"cache" toml:"cache"`
+*/
+
 type EncoderDecoder interface {
 	IsSupported(buildpackAPI string) bool
-	Encode(file *os.File, lmf layertypes.LayerMetadataFile) error
-	Decode(path string) (layertypes.LayerMetadataFile, string, error)
+	Encode(file *os.File, lmf Layer) error
+	Decode(path string) (Layer, string, error) // TODO: YAEL - pass a logger to this function
 }
 
 func defaultEncodersDecoders() []EncoderDecoder {
@@ -211,7 +225,7 @@ func defaultEncodersDecoders() []EncoderDecoder {
 	}
 }
 
-func EncodeLayerMetadataFile(lmf layertypes.LayerMetadataFile, path, buildpackAPI string) error {
+func EncodeLayerMetadataFile(lmf Layer, path, buildpackAPI string) error {
 	fh, err := os.Create(path)
 	if err != nil {
 		return err
@@ -228,12 +242,12 @@ func EncodeLayerMetadataFile(lmf layertypes.LayerMetadataFile, path, buildpackAP
 	return errors.New("couldn't find an encoder")
 }
 
-func DecodeLayerMetadataFile(path, buildpackAPI string) (layertypes.LayerMetadataFile, string, error) {
+func DecodeLayerMetadataFile(path, buildpackAPI string) (Layer, string, error) {
 	fh, err := os.Open(path)
 	if os.IsNotExist(err) {
-		return layertypes.LayerMetadataFile{}, "", nil
+		return &api05.Layer05{}, "", nil // TODO: YAEL - change the return value
 	} else if err != nil {
-		return layertypes.LayerMetadataFile{}, "", err
+		return &api05.Layer05{}, "", err // TODO: YAEL - change the return value
 	}
 	defer fh.Close()
 
@@ -244,5 +258,5 @@ func DecodeLayerMetadataFile(path, buildpackAPI string) (layertypes.LayerMetadat
 			return decoder.Decode(path)
 		}
 	}
-	return layertypes.LayerMetadataFile{}, "", errors.New("couldn't find a decoder")
+	return &api05.Layer05{}, "", errors.New("couldn't find a decoder") // TODO: YAEL - change the return value
 }
