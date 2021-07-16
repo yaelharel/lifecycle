@@ -155,15 +155,24 @@ func authConfigToHeader(config *authn.AuthConfig) (string, error) {
 		return fmt.Sprintf("Basic %s", encoded), nil
 	}
 
+	if config.IdentityToken != "" {
+		// TODO: YAEL - does it matter what do we write here as long it matches line 169?
+		return fmt.Sprintf("Access %s", config.IdentityToken), nil
+	}
+
 	return "", nil
 }
 
 var (
 	basicAuthRegExp  = regexp.MustCompile("(?i)^basic (.*)$")
 	bearerAuthRegExp = regexp.MustCompile("(?i)^bearer (.*)$")
+	accessAuthRegExp = regexp.MustCompile("(?i)^access (.*)$")
 )
 
 func authHeaderToConfig(header string) (*authn.AuthConfig, error) {
+	// TODO: YAEL - why do we use matches[0][1]?
+	// 0 - can we use FindStringSubmatch instead of FindAllStringSubmatch?
+	// 1 - what does it stand for? Probably the `i` in the regexp above, but why do we need it?
 	if matches := basicAuthRegExp.FindAllStringSubmatch(header, -1); len(matches) != 0 {
 		return &authn.AuthConfig{
 			Auth: matches[0][1],
@@ -173,6 +182,12 @@ func authHeaderToConfig(header string) (*authn.AuthConfig, error) {
 	if matches := bearerAuthRegExp.FindAllStringSubmatch(header, -1); len(matches) != 0 {
 		return &authn.AuthConfig{
 			RegistryToken: matches[0][1],
+		}, nil
+	}
+
+	if matches := accessAuthRegExp.FindAllStringSubmatch(header, -1); len(matches) != 0 {
+		return &authn.AuthConfig{
+			IdentityToken: matches[0][1],
 		}, nil
 	}
 
